@@ -2,3 +2,5 @@
 **obj/
 **bin/
 
+/backend/TrainingChatWebApp/appsettings.json
+/backend/TrainingChatWebApp/appsettings.Development.json
