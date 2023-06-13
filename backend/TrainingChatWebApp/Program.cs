@@ -24,7 +24,7 @@ static class Program
 
 			var username = Encoding.UTF8.GetString(usernameBuffer, 0, usernameLength);
 
-			await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+			await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Port=3307; Database=TrainingChatApp");
 			var user = (await connection.QueryAsync<User>(
 				"""
 					SELECT *
@@ -60,16 +60,72 @@ static class Program
 	
 			await connection.ExecuteAsync(
 				"""
-					INSERT INTO TrainingChatApp.Sessions
-					VALUES (NULL, @UserKey, @SessionID)
+					INSERT INTO TrainingChatApp.Session
+					VALUES (NULL, @SessionID, @UserKey)
 				""",
 				new { UserKey = session.UserKey, SessionId = session.SessionId});
 
 			return Results.Ok(new { SessionId = session.SessionId }); //200
 		});
+		app.MapGet("/user", async ([FromHeader(Name = "Authorization")] string authorization) => {
+
+			var authorizationSplit = authorization.Split(' ');
+			
+			if(authorizationSplit.Length != 2)
+			{
+				return Results.BadRequest();
+			}
+
+			var authScheme = authorizationSplit[0];
+
+			if(authScheme != "Bearer")
+			{
+				return Results.BadRequest();
+			}
+
+			var authSessionGuid = authorizationSplit[1];
+			try
+			{
+				_= Guid.Parse(authSessionGuid);
+			}
+			catch (System.Exception)
+			{
+				return Results.BadRequest();
+			}
+
+			var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Port=3307; Database=TrainingChatApp");
+			var session = (await connection.QueryAsync<Session>(
+				"""
+					SELECT session.Key, session.UserKey
+					FROM TrainingChatApp.Session session
+					WHERE SessionId = @session
+					LIMIT 1
+				""",
+				new {session = authSessionGuid}
+			)).FirstOrDefault();
+
+			if(session == null)
+			{
+				return Results.Unauthorized();
+			}
+
+			var user = (await connection.QueryAsync<User>(
+				"""
+					SELECT user.Key, user.Username, user.Name
+					FROM TrainingChatApp.Users user
+					WHERE user.Key = @userKey
+					LIMIT 1
+				""",
+				new {userKey = session.UserKey}
+			)).First();
+
+			return Results.Ok(new {user.Key, user.Name, user.Username});
+		});
 
 		app.Run();
 	}
+
+
 	
 	private static async Task<int> ReadLineFromStream (Stream bodyStream, byte[] buffer)
 	{
