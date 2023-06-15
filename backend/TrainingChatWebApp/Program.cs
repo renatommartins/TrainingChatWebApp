@@ -4,6 +4,7 @@ using Dapper;
 using MySql.Data.MySqlClient;
 using Konscious.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 static class Program
 {
@@ -59,13 +60,49 @@ static class Program
 	
 			await connection.ExecuteAsync(
 				"""
-					INSERT INTO TrainingChatApp.Sessions
-					VALUES (NULL, @UserKey, @SessionID)
+					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId)
+					VALUES (@UserKey, @SessionId)
 				""",
 				new { UserKey = session.UserKey, SessionId = session.SessionId});
 
 			return Results.Ok(new { SessionId = session.SessionId }); //200
 		});
+		app.MapGet("/user", async ([FromHeader(Name = "Authorization")]string authorization) =>
+		{
+			var authorizationSplit = authorization.Split(' ');
+			if(authorizationSplit.Length != 2) { return Results.BadRequest(); }
+			var sessionToken = authorizationSplit[1];
+			if (authorizationSplit[0] != "Bearer") { return Results.BadRequest(); }
+			try
+			{
+				_= Guid.Parse(sessionToken);
+            }
+			catch
+			{
+				return Results.BadRequest();
+            }
+
+            await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+            var session = (await connection.QueryAsync<Session>(
+            """
+				SELECT UserKey FROM TrainingChatApp.Sessions
+				WHERE SessionId = @sessionToken 
+				limit 1
+			""",
+                new { sessionToken = sessionToken })).FirstOrDefault();
+
+            if (session is null) { return Results.Unauthorized(); }
+
+			var user = (await connection.QueryAsync<User>(
+			"""
+				SELECT u.Name, u.Username, u.Key FROM TrainingChatApp.Users u
+				WHERE u.Key = @UserKey 
+				limit 1
+			""",
+				new { UserKey = session.UserKey })).First();
+
+			return Results.Ok(new{user.Name, user.Username, user.Key});
+        });
 
 		app.Run();
 	}
