@@ -59,14 +59,14 @@ static class Program
 	
 			await connection.ExecuteAsync(
 				"""
-					INSERT INTO TrainingChatApp.Sessions
-					VALUES (NULL, @UserKey, @SessionID)
+					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId)
+					VALUES (@UserKey, @SessionID)
 				""",
 				new { UserKey = session.UserKey, SessionId = session.SessionId});
 
 			return Results.Ok(new { SessionId = session.SessionId }); //200
 		});
-
+		
 		app.MapGet("/user", async ([FromHeader(Name = "Authorization")] string authorization) =>
 		{
 			var authSplit = authorization.Split(' ');
@@ -103,7 +103,7 @@ static class Program
 
 			return Results.Ok(new { user.Key, user.Username, user.Name });
 		});
-		
+
 		app.Run();
 	}
 	
