@@ -15,7 +15,7 @@ public static class AuthenticationService
 			return new AuthenticationResult
 			{
 				Result = ResultEnum.InvalidFormat,
-			}; //Results.BadRequest();
+			};
 		}
 
 		var scheme = authSplit[0];
@@ -43,13 +43,16 @@ public static class AuthenticationService
 
 		await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
 		var session = (await connection.QueryAsync<Session>("""
-					SELECT s.Key, s.UserKey
+					SELECT s.Key, s.UserKey, s.ExpiresAt, s.IsLoggedOut
 					FROM TrainingChatApp.Sessions s
 					WHERE SessionId = @session
 					LIMIT 1
 				""", new {session = sessionGuid.ToString()})).FirstOrDefault();
 
-		if (session == null)
+		if (
+			session == null ||
+			session.ExpiresAt < DateTime.UtcNow ||
+			session.IsLoggedOut)
 		{
 			return new AuthenticationResult
 			{
@@ -68,6 +71,7 @@ public static class AuthenticationService
 		{
 			Result = ResultEnum.Authenticated,
 			User = user,
+			Session = session,
 		};
 	}
 }
