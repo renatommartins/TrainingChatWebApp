@@ -16,8 +16,30 @@ public static class UserEndpoints
 	{
 		app.MapGet("/login", LoginEndpoint);
 		app.MapGet("/user", GetUser);
+		app.MapGet("/logout", Logout);
 	}
 
+	private static async Task<IResult> Logout([FromHeader(Name = "Authorization")] string authorization)
+	{
+		var (result, _, session) = await AuthenticationService.AuthenticateSession(authorization);
+
+		switch (result)
+		{
+			case ResultEnum.InvalidFormat: return Results.BadRequest();
+			case ResultEnum.Unauthorized: return Results.Unauthorized();
+		}
+		
+		using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Port=3307; Database=TrainingChatApp");
+        var rowsAffected = await (connection.ExecuteAsync("""
+			UPDATE TrainingChatApp.Sessions s
+			SET s.isLogout = 1
+			where s.Key = @Key
+			""", 
+			new { Key = session.Key }));
+		if (rowsAffected == 1) { return Results.Ok(); }
+		throw new Exception();
+		
+	} 
 	private static IResult LoginEndpoint([FromHeader(Name = "Authorization")] string authorization)
 	{
 		var authorizationBytes = new byte[256];
@@ -67,7 +89,7 @@ public static class UserEndpoints
 					*currentChar = '\0';
 		}
 
-		using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+		using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Port=3307; Database=TrainingChatApp");
 		var user = (connection.Query<User>("""
 					SELECT *
 					FROM TrainingChatApp.Users
@@ -96,19 +118,19 @@ public static class UserEndpoints
 			return Results.Unauthorized();
 		}
 
-		var session = new Session {UserKey = user.Key, SessionId = Guid.NewGuid(),};
+		var session = new Session {UserKey = user.Key, SessionId = Guid.NewGuid(), ExpiresAt = DateTime.UtcNow.AddHours(16)};
 
 		connection.Execute("""
-					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId)
-					VALUES (@UserKey, @SessionID)
-				""", new {UserKey = session.UserKey, SessionId = session.SessionId});
+					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId, ExpiresAt)
+					VALUES (@UserKey, @SessionID, @ExpiresAt)
+				""", new {UserKey = session.UserKey, SessionId = session.SessionId, ExpiresAt = session.ExpiresAt});
 
 		return Results.Ok(new {SessionId = session.SessionId}); //200
 	}
 	
 	private static async Task<IResult> GetUser([FromHeader(Name = "Authorization")] string authorization)
 	{
-		var (result, user) = await AuthenticationService.AuthenticateSession(authorization);
+		var (result, user, _) = await AuthenticationService.AuthenticateSession(authorization);
 
 		switch (result)
 		{
