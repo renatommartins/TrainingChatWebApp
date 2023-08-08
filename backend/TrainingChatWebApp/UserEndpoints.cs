@@ -3,6 +3,7 @@ using Konscious.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using System.Text;
+using TrainingChatApp.Models.Database;
 using TrainingChatWebApp.Database.Models;
 using TrainingChatWebApp.Services;
 using TrainingChatWebApp.Services.Enums;
@@ -148,7 +149,7 @@ public static class UserEndpoints
 			case ResultEnum.InvalidFormat: return Results.BadRequest();
 			case ResultEnum.Unauthorized: return Results.Unauthorized();
 		}
-
-		return Results.Ok(new {user.Key, user.Username, user.Name});
+		
+		return await Task.FromResult(Results.Ok(new {user.Key, user.Username, user.Name}));
 	}
 }

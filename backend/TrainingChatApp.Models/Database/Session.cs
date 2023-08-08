@@ -1,4 +1,4 @@
-﻿namespace TrainingChatWebApp.Database.Models;
+﻿namespace TrainingChatApp.Models.Database;
 
 public class Session
 {

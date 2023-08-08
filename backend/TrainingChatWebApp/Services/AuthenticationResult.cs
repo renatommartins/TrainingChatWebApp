@@ -1,4 +1,5 @@
-﻿using TrainingChatWebApp.Database.Models;
+﻿using TrainingChatApp.Models.Database;
+using TrainingChatWebApp.Database.Models;
 using TrainingChatWebApp.Services.Enums;
 
 namespace TrainingChatWebApp.Services;

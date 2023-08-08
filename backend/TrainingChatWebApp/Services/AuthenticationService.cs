@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
+using TrainingChatApp.Models.Database;
 using TrainingChatWebApp.Database.Models;
 using TrainingChatWebApp.Services.Enums;
 
