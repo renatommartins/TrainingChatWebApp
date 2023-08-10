@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Net;
+using Dapper;
 using Konscious.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
@@ -15,9 +16,68 @@ public static class UserEndpoints
 {
 	public static void MapEndpoints(WebApplication app)
 	{
+		app.MapPost("/signup", SignupUser);
 		app.MapGet("/login", LoginEndpoint);
 		app.MapGet("/logout", LogoutEndpoint);
 		app.MapGet("/user", GetUser);
+	}
+
+	private static async Task<IResult> SignupUser(HttpContext context, [FromBody] SignupModel signupModel)
+	{
+		await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+
+		var userCheck = (await connection.QueryAsync<User>("""
+					SELECT u.Username
+					FROM TrainingChatApp.Users u
+					WHERE Username = @Username
+					LIMIT 1
+				""", new {Username = signupModel.Username})).FirstOrDefault();
+
+		if (userCheck is not null)
+		{
+			unsafe
+			{
+				fixed (char* authPointer = signupModel.Password)
+					for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
+						*currentChar = '\0';
+			}
+			return Results.Problem(detail: "User already exists", statusCode: (int) HttpStatusCode.Conflict);
+		}
+		
+		var passwordBuffer = new byte[128];
+		var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+
+		for (var i = 0; i < signupModel.Password.Length; i++)
+		{
+			passwordBuffer[i] = (byte)signupModel.Password[i];
+		}
+		
+		unsafe
+		{
+			fixed (char* authPointer = signupModel.Password)
+				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
+					*currentChar = '\0';
+		}
+		
+		var hasher = new Argon2id(passwordBuffer);
+		hasher.DegreeOfParallelism = 8;
+		hasher.MemorySize = 16 * 1024;
+		hasher.Iterations = 10;
+		hasher.Salt = salt;
+
+		var hash = await hasher.GetBytesAsync(16);
+		
+		Array.Fill(passwordBuffer, (byte)0x00);
+
+		var rowsAffected = await connection.ExecuteAsync("""
+					INSERT INTO TrainingChatApp.Users (Username, Name, PasswordHash, Salt)
+					VALUES (@Username, @Name, @Password, @Salt)
+				""", new {Username = signupModel.Username, Name = signupModel.Name, Password = hash, Salt = salt});
+
+		if (rowsAffected != 1)
+			throw new Exception();
+
+		return Results.Ok();
 	}
 
 	private static IResult LoginEndpoint([FromHeader(Name = "Authorization")] string authorization)
@@ -152,4 +212,11 @@ public static class UserEndpoints
 		
 		return await Task.FromResult(Results.Ok(new {user.Key, user.Username, user.Name}));
 	}
+}
+
+public class SignupModel
+{
+	public string Username { get; set; }
+	public string Password { get; set; }
+	public string Name { get; set; }
 }
