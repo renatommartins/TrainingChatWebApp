@@ -29,7 +29,7 @@ class Program
 		};
 
 		var client = new Client(
-			$"ws://{serverAddress}ws-test",
+			$"ws://{serverAddress}chat-ws",
 			userName,
 			customHeaders: customHeaders,
 			SendPreprocessor: SendPreprocessor,
