@@ -10,7 +10,7 @@ public static class ChatEndpoints
 {
 	public static void MapEndpoints(WebApplication app)
 	{
-		app.MapGet("/chat-ws", ChatWebsocket);
+		app.MapGet("/chat-ws", ChatWebsocket).RequireCors(Program.AllowedOrigins);
 	}
 	
 	private static async Task<IResult> ChatWebsocket (HttpContext context, CancellationToken ct)
