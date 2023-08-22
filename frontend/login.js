@@ -3,6 +3,7 @@ function login() {
     let passwordElement = document.getElementById("inPassword");
     let password = passwordElement.value
     let outAlert = document.getElementById("outAlert");
+    let cardAlert = document.getElementById("cardAlert")
     console.log(user, password);
     let encodedLogin = "Basic " + btoa(user + ":" + password);
 
@@ -23,6 +24,7 @@ function login() {
             case 401:
                 passwordElement.value = '';
                 outAlert.innerHTML = "Vai esquecer a senha no caralho";
+                cardAlert.classList.remove("hide");
                 console.log("Erro de senha ou usuário");
                 break;
             case 500:

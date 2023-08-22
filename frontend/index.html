@@ -4,21 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <title>Aravipac</title>
 </head>
 
 <body>
-    <div>
-        <label for="inUser">User:</label>
-        <input type="text" name="inUser" id="inUser">
-        <label for="inPassword">Password:</label>
-        <input type="password" name="inPassword" id="inPassword">
-        <pre id="outAlert"></pre>
-        <button type="submit" onclick="login()">login</button>
+    <div class="container">
+        <h1 class="row" style="font-size: 30px; text-align: center; margin-bottom: 10% ;">
+            Aravipac Chat Corp
+        </h1>
+        <h2 class="row" style="font-size: 24px; text-align: left;">
+            Login
+        </h2>
+        <div class="row">
+            <div class="input-field row">
+                <label for="inUser">User</label>
+                <input type="text" name="inUser" id="inUser">
+            </div>
+            <div class="input-field row">
+                <label for="inPassword">Password</label>
+                <input type="password" name="inPassword" id="inPassword">
+            </div>
+            <div class="row hide" id="cardAlert">
+                <div class="col s10 offset-s1">
+                    <div class="card-panel red lighten-3">
+                        <pre style="text-align: center;" id="outAlert"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <button class="waves-effect waves-light btn-small col s2" type="submit" onclick="login()">login</button>
+                <a href="signup.html" target="_blank">
+                    <button class="waves-effect waves-light btn-small col s2 offset-s8">Sign
+                        up</button>
+                </a>
+            </div>
+        </div>
     </div>
-    <div>
-        <a href="signup.html" target="_blank">Sign up</a>
-    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 <script src="login.js"></script>
 
