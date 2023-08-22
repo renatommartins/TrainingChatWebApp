@@ -23,7 +23,7 @@ function login() {
                 break;
             case 401:
                 passwordElement.value = '';
-                outAlert.innerHTML = "Vai esquecer a senha no caralho";
+                outAlert.innerHTML = "Incorrect user or password";
                 cardAlert.classList.remove("hide");
                 console.log("Erro de senha ou usuário");
                 break;
