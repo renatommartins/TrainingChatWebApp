@@ -14,7 +14,7 @@ internal static class Program
 				policy =>
 				{
 					policy.WithOrigins("http://localhost:5140","http://localhost:5500","http://127.0.0.1:5500");
-					policy.WithHeaders("Authorization");
+					policy.WithHeaders("Authorization","Content-type");
 				});
 		});
 		
