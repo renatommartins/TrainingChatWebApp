@@ -15,7 +15,6 @@ function login() {
     httpRequest.onloadend = function (e) {
         switch (httpRequest.status) {
             case 200:
-                console.log("Enviar para a página correta");
                 let session = JSON.parse(httpRequest.response).sessionId;
                 myStorage = localStorage;
                 localStorage.setItem(myStorage, session);
@@ -25,10 +24,10 @@ function login() {
                 passwordElement.value = '';
                 outAlert.innerHTML = "Incorrect user or password";
                 cardAlert.classList.remove("hide");
-                console.log("Erro de senha ou usuário");
                 break;
             case 500:
-                console.log("servidor bunda mole, tente novamente");
+                outAlert.innerHTML = "Our server is out";
+                cardAlert.classList.remove("hide");
         }
     };
     httpRequest.setRequestHeader(
