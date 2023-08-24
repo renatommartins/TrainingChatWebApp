@@ -17,7 +17,7 @@ function login() {
             case 200:
                 let session = JSON.parse(httpRequest.response).sessionId;
                 myStorage = localStorage;
-                localStorage.setItem(myStorage, session);
+                localStorage.setItem("sessionToken", session);
                 window.location.href = "/frontend/chat.html"
                 break;
             case 401:
