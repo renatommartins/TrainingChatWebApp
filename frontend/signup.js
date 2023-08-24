@@ -1,12 +1,18 @@
 function signup() {
-    let name = document.getElementById("inName").value;
-    let user = document.getElementById("inUser").value;
+    let userElement = document.getElementById("inUser");
+    let user = userElement.value;
+    let nameElement = document.getElementById("inName");
+    let name = nameElement.value;
     let passwordElement = document.getElementById("inPassword");
     let password = passwordElement.value
     let confirmPasswordElement = document.getElementById("inConfirmPassword");
     let confirmPassword = confirmPasswordElement.value
     let outAlert = document.getElementById("outAlert");
-    let cardAlert = document.getElementById("cardAlert")
+    let successCreate = document.getElementById("successCreate");
+    let cardAlert = document.getElementById("cardAlert");
+    let cardSuccess = document.getElementById("cardSuccess");
+    let signUpButton = document.getElementById("signUpButton");
+
     console.log(name, user, password, confirmPassword);
 
     if(password != confirmPassword)
@@ -28,7 +34,17 @@ function signup() {
         switch (httpRequest.status) {
             case 200:
                 console.log("Sucesso");
-                window.location.href = "/frontend/index.html"
+                successCreate.innerHTML = "User created successfully\nRedirecting to Login Page";
+                cardSuccess.classList.remove("hide");
+                signUpButton.classList.add("disabled");
+                nameElement.disabled = true; 
+                userElement.disabled = true; 
+                passwordElement.disabled = true; 
+                confirmPasswordElement.disabled = true; 
+
+                setTimeout(function (){                    
+                    window.location.href = "/frontend/index.html"
+                }, 5000)
                 break;
             case 409:
                 passwordElement.value = '';
@@ -42,3 +58,4 @@ function signup() {
     };
     httpRequest.send(body);
 }
+
