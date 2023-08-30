@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using TrainingChatApp.Models.Chat;
 using TrainingChatWebApp.Services;
@@ -15,8 +16,9 @@ public static class ChatEndpoints
 	
 	private static async Task<IResult> ChatWebsocket (HttpContext context, CancellationToken ct)
 	{
+		var authHeader = "Bearer " + context.Request.Headers.WebSocketSubProtocols;
 		var (result, user, _) =
-			await AuthenticationService.AuthenticateSession(context.Request.Headers.Authorization.ToString());
+			await AuthenticationService.AuthenticateSession(authHeader);
 
 		var jsonOptions = new JsonSerializerOptions
 		{
@@ -38,7 +40,7 @@ public static class ChatEndpoints
 
 		if (!context.WebSockets.IsWebSocketRequest) return Results.Ok();
 		
-		using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+		using var webSocket = await context.WebSockets.AcceptWebSocketAsync(context.Request.Headers.WebSocketSubProtocols);
 		
 		var userConnection = new UserConnection(user, webSocket);
 		_ = userConnection.Start(ct);

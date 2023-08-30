@@ -21,7 +21,7 @@ class Client
 	public Client(
 		string uri,
 		string userName,
-		List<KeyValuePair<string,string>>? customHeaders = default,
+		string sessionToken,
 		Func<string,string, string?>? SendPreprocessor = default,
 		Func<string, string?>? ReceivePreprocessor = default)
 	{
@@ -32,7 +32,7 @@ class Client
 		_sendPreprocessor = SendPreprocessor;
 		_receivePreprocessor = ReceivePreprocessor;
 			
-		_client = new WebSocket4Net.WebSocket(uri, "", null, customHeaders);
+		_client = new WebSocket4Net.WebSocket(uri, sessionToken);
 
 		_client.Error += (sender, error) =>
 		{

@@ -23,15 +23,10 @@ class Program
 		var sessionToken = await Login($"http://{serverAddress}", args[1], args[2]);
 		var userName = await UserName($"http://{serverAddress}", sessionToken);
 
-		var customHeaders = new List<KeyValuePair<string, string>>
-		{
-			new ("Authorization", $"Bearer {sessionToken}"),
-		};
-
 		var client = new Client(
 			$"ws://{serverAddress}chat-ws",
 			userName,
-			customHeaders: customHeaders,
+			sessionToken: sessionToken,
 			SendPreprocessor: SendPreprocessor,
 			ReceivePreprocessor: ReceivePreprocessor);
 		client.ClientMain();
