@@ -43,7 +43,7 @@ function signup() {
                 confirmPasswordElement.disabled = true; 
 
                 setTimeout(function (){                    
-                    window.location.href = "/frontend/index.html"
+                    window.location.href = "/index.html"
                 }, 5000)
                 break;
             case 409:

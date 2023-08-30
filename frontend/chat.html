@@ -5,37 +5,76 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="aravipacPipoqueiraLogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatAravipac</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Aravipac</title>
 </head>
-<header>
-    <div>
-        Nosso Chat name and logo
 
-    </div>
-</header>
-
-<body>
+<body onload="Initialize()" style="overflow-y: hidden;">
     <div id="container">
-        <div id="sideChats">
-            <p>Aqui ficam os chats</p>
-            <p>Testando</p>
-            <p>Testando</p>
-        </div>
-        <div id="mensagemInput">
-            <p id="mensagensRecebidas">
-                Aqui ficam os textos
-            </p>
-            <p>Teste</p>
-
-            <label for="textarea">Mensagem:</label>
-            <textarea id="texto"></textarea>
-            <button type="submit">Enviar</button>
+        <div class="row" style="height: 100vh">
+            <div class="col s3 grey" style="height: inherit;">
+                <p>Aqui ficam os chats</p>
+                <p>Testando</p>
+                <p>Testando</p>
+            </div>
+            <div class="col s9 teal" style="height: 100vh;">
+                <div id="idChatRoomListDiv" class="" style="border-style: solid; border-width: thin; height: 100vh; overflow: hidden;">
+                    <div style="display: flex; flex-direction: row; border-bottom: thin solid black; height: 15%; width: 100%;">
+                        <div style="flex: 8 0 0;">
+                            <h2 style="font-size: large; padding-left: 2.5%;">
+                                Chat Room List
+                            </h2>
+                        </div>
+                        <div style="flex: 0 1 0; align-self: center; padding: 2.5%;">
+                            <a class="btn" style="flex-grow: 1;" onclick="RequestListChatRoom(window.websocket)">Refresh</a>
+                        </div>
+                    </div>
+                    <div style="overflow-y: scroll; height: 85%; max-height: 85%;">
+                        <table id="idChatRoomListTable" class="highlight" >
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="idJoinedChatRoom" class="hide" style="height: 100vh; height: 100vh;">
+                    <div style="display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: flex; flex-direction: row; flex: 0 1 0;">
+                            <h2 style="font-size: large;">
+                                Chat Room Name
+                            </h2>
+                        </div>
+                        <div style="display: flex; flex-direction: row; flex: 1 0 0; border: thin solid black;">
+                            <div style="flex: 1 1 0; overflow-y: scroll; height: 100%; max-height: 100%;">
+                                <table id="idChatRoomMessages" class="strip" >
+                                    <tbody>
+                                        <tr>
+                                            teste ultra lulo
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="flex: 0 0 25%; overflow-y: scroll; height: 100%; max-height: 100%; margin-left: 0.5%; padding-left: 0.5%; border-left: thin solid black;">
+                                <table id="idChatRoomUsers" class="strip" >
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: row; flex: 0 1 0;">
+                            <div class="input-field" style="flex: 1 1 0">
+                                <label for="inMessage">Message</label>
+                                <input type="text" name="inMessage" id="inMessage">
+                            </div>
+                            <a class="btn-floating" style="align-self:  center;"><i class="material-icons">clear</i></a>
+                            <div style="flex: 0 0 0; align-self: center;">
+                                <a class="btn" onclick="console.log('lulo neles')">Send</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
-<footer>
-    Aravipac Solution
-</footer>
-
+<script src="chat.js"></script>
 </html>

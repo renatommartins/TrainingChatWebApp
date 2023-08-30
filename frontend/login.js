@@ -18,7 +18,7 @@ function login() {
                 let session = JSON.parse(httpRequest.response).sessionId;
                 myStorage = localStorage;
                 localStorage.setItem("sessionToken", session);
-                window.location.href = "/frontend/chat.html"
+                window.location.href = "/chat.html"
                 break;
             case 401:
                 passwordElement.value = '';
