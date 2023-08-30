@@ -210,7 +210,7 @@ public static class UserEndpoints
 			case ResultEnum.Unauthorized: return Results.Unauthorized();
 		}
 		
-		return await Task.FromResult(Results.Ok(new {user.Key, user.Username, user.Name}));
+		return await Task.FromResult(Results.Ok(new {user.Username, user.Name}));
 	}
 }
 
