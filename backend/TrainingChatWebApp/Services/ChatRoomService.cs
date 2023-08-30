@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TrainingChatApp.Models.Chat;
 using TrainingChatWebApp.Database.Models;
 
@@ -12,6 +14,11 @@ public class ChatRoom
 
 	public static ReadOnlyDictionary<int, ChatRoom> ChatRooms =>
 		_readOnlyChatRooms ??= new ReadOnlyDictionary<int, ChatRoom>(ChatRoomsBackingField);
+	
+	public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+	{
+		Converters = {new JsonStringEnumConverter()},
+	};
 
 	public static ChatRoom CreateChatRoom(UserConnection userConnection, string name)
 	{
@@ -81,7 +88,7 @@ public class ChatRoom
 			{
 				UserName = sender.Name,
 				Message = message,
-			}).SerializeToBytes());
+			}).SerializeToBytes(jsonOptions));
 		}
 	}
 
@@ -94,7 +101,7 @@ public class ChatRoom
 					new ServerMessage.UserJoinedChatRoom
 					{
 						UserName = newConnection.User.Name,
-					}).SerializeToBytes());
+					}).SerializeToBytes(jsonOptions));
 		}
 		
 		_user.Add(newConnection.User.Key, newConnection);
@@ -111,7 +118,7 @@ public class ChatRoom
 					new ServerMessage.UserLeftChatRoom
 					{
 						UserName = leavingConnection.User.Name,
-					}).SerializeToBytes());
+					}).SerializeToBytes(jsonOptions));
 		}
 
 		if (_user.Count == 0)
