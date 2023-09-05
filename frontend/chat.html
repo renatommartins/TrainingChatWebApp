@@ -11,6 +11,21 @@
 </head>
 
 <body onload="Initialize()" style="overflow-y: hidden;">
+    <div id="createRoomModal" class="modal">
+        <div class="modal-content">
+            <h5>Create Chat Room</h5>
+            <label for="inRoomName">Chat Room Name</label>
+            <input type="text" name="inRoomName" id="inRoomName">
+            <div class="row" style="margin-bottom: 0;">
+                <div class="col s2 offset-s8">
+                    <a class="modal-close btn" style="width: 100%" onclick="RequestCreateChatRoom()">Create</a>
+                </div>
+                <div class="col s2">
+                    <a class="modal-close btn" style="width: 100%">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="container">
         <div class="row" style="height: 100vh">
             <div class="col s3 grey" style="height: inherit;">
@@ -26,6 +41,9 @@
                                 Chat Room List
                             </h2>
                         </div>
+                        <div style="flex: 3 1 1; align-self: center;">
+                            <button data-target="createRoomModal" class="waves-effect waves-light btn modal-trigger">Create Room</button>
+                        </div>
                         <div style="flex: 0 1 0; align-self: center; padding: 2.5%;">
                             <a class="btn" style="flex-grow: 1;" onclick="RequestListChatRoom(window.websocket)">Refresh</a>
                         </div>
@@ -39,9 +57,14 @@
                 <div id="idJoinedChatRoom" class="hide" style="height: 100vh; height: 100vh;">
                     <div style="display: flex; flex-direction: column; height: 100%;">
                         <div style="display: flex; flex-direction: row; flex: 0 1 0;">
-                            <h2 style="font-size: large;">
-                                Chat Room Name
-                            </h2>
+                            <div style="flex: 8 1 0">
+                                <h2 style="font-size: large;">
+                                    Chat Room Name
+                                </h2>   
+                            </div>   
+                            <div style="flex: 3 1 1; align-self: center;" >
+                                <a class="btn" onclick="">Leave Room</a>
+                            </div>                  
                         </div>
                         <div style="display: flex; flex-direction: row; flex: 1 0 0; border: thin solid black;">
                             <div style="flex: 1 1 0; overflow-y: scroll; height: 100%; max-height: 100%;">
@@ -74,6 +97,7 @@
             </div>
         </div>
     </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 <script src="chat.js"></script>

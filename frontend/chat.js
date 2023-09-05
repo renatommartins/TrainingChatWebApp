@@ -1,7 +1,13 @@
+document.addEventListener('DOMContentLoaded', function() {
+	var elems = document.querySelectorAll('.modal');
+	var instances = M.Modal.init(elems);
+  });
+
 function Initialize (a){
 	let sessionToken = localStorage.getItem("sessionToken");
 	console.log(sessionToken);
-
+	
+	
 	let getuserRequest = new XMLHttpRequest();
 	getuserRequest.open("GET", 'http://localhost:5140/user');
 	getuserRequest.onloadend = function (e) {
@@ -38,6 +44,7 @@ function ChatConnection(userData) {
 
 		switch(response.Type) {
 			case "ResponseCreateChatRoom":
+				ResponseCreateChatRoom(response.Data);
 				console.log("ResponseCreateChatRoom");
 				break;
 			case "ResponseListChatRoom":
@@ -70,6 +77,18 @@ function ChatConnection(userData) {
 	websocket.addEventListener("close", (event) =>{
 		console.log("porra, fechou");
 	});
+}
+function ResponseCreateChatRoom(){
+	let chatRoomListElement = document.getElementById("idChatRoomListDiv");
+	let joinedChatRoomElement = document.getElementById("idJoinedChatRoom");
+	let chatRoomMessagesElement = document.getElementById("idChatRoomMessages");
+	let chatRoomUsersElement = document.getElementById("idChatRoomUsers");
+
+	chatRoomListElement.classList.add("hide");
+	joinedChatRoomElement.classList.remove("hide");
+
+	let newUserElement = chatRoomUsersElement.insertRow();
+	newUserElement.innerHTML = "Felipe"
 }
 
 function ResponseListChatRoom(roomArray) {
@@ -122,6 +141,20 @@ function NotificationUserJoined(userName) {
 }
 
 // Messages to server.
+
+function RequestCreateChatRoom(){
+	let nameRoom = document.getElementById("inRoomName").value;
+	websocket.send(
+		JSON.stringify(
+			{
+				Type: "CreateChatRoom",
+				Data: {Name: nameRoom}
+			}));
+
+	console.log(websocket);
+	console.log("Sala " + nameRoom + " criada!");
+
+}
 
 function RequestListChatRoom (websocket) {
 	websocket.send(
