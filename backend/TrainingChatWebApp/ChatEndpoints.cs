@@ -172,7 +172,7 @@ public static class ChatEndpoints
 						{
 							userConnection.Send(
 								ServerMessage
-									.CreateErrorMessage<ServerMessage.ResponseCreateChatRoom>(
+									.CreateErrorMessage<ServerMessage.ResponseLeaveChatRoom>(
 										"User is not in a Chat Room")
 									.SerializeToBytes(jsonOptions));
 							break;
