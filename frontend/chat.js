@@ -3,7 +3,11 @@ document.addEventListener('DOMContentLoaded', function () {
 	var instances = M.Modal.init(elems);
 	window.modalInstances = instances;
 });
-
+document.addEventListener("keydown", (event) => {
+	if (event.isComposing || event.keyCode === 13) {
+		RequestSendChatRoomMessage();
+	}
+});
 function Initialize(a) {
 	let sessionToken = localStorage.getItem("sessionToken");
 	console.log(sessionToken);
@@ -14,6 +18,7 @@ function Initialize(a) {
 		switch (getuserRequest.status) {
 			case 200:
 				let userData = JSON.parse(getuserRequest.response);
+				window.userData = userData;
 				console.log(userData);
 				ChatConnection(userData);
 				break;
@@ -59,7 +64,7 @@ function ChatConnection(userData) {
 				ResponseLeaveChatRoom(response.Data);
 				break;
 			case "ReceiveChatRoomMessage":
-				console.log("ReceiveChatRoomMessage");
+				NotificationReceiveChatRoomMessage(response.Data);
 				break;
 			case "UserJoinedChatRoom":
 				console.log("UserJoinedChatRoom");
@@ -91,16 +96,21 @@ function ResponseCreateChatRoom() {
 		}
 	});
 	outAlertRoom.innerHTML = "";
+	chatRoomUsersElement.innerHTML = "";
 	chatRoomListElement.classList.add("hide");
 	joinedChatRoomElement.classList.remove("hide");
 	nameRoom.value = "";
 	let newUserElement = chatRoomUsersElement.insertRow();
-	newUserElement.innerHTML = "User"
+	newUserElement.innerHTML = window.userData.name;
 }
 function ResponseLeaveChatRoom() {
 	let chatRoomListElement = document.getElementById("idChatRoomListDiv");
 	let joinedChatRoomElement = document.getElementById("idJoinedChatRoom");
+	let chatRoomMessagesElement = document.getElementById("idChatRoomMessages");
+	let chatRoomUsersElement = document.getElementById("idChatRoomUsers");
 
+	chatRoomMessagesElement.innerHTML = "";
+	chatRoomUsersElement.innerHTML = "";
 
 	chatRoomListElement.classList.remove("hide");
 	joinedChatRoomElement.classList.add("hide");
@@ -115,6 +125,12 @@ function ResponseListChatRoom(roomArray) {
 		newElement.innerHTML = roomArray[i].Name;
 		newElement.onclick = function () { RequestJoinChatRoom(window.websocket, roomArray[i].Name, roomArray[i].Id) };
 	}
+}
+function NotificationReceiveChatRoomMessage(Data) {
+	let chatRoomMessageElement = document.getElementById("idChatRoomMessages");
+
+	let newMessage = chatRoomMessageElement.insertRow();
+	newMessage.innerHTML = `${Data.UserName} : ${Data.Message}`;
 }
 
 function ResponseJoinChatRoom(chatRoomData) {
@@ -174,6 +190,22 @@ function RequestCreateChatRoom() {
 
 }
 
+function RequestSendChatRoomMessage() {
+	let chatRoomMessageElement = document.getElementById("inMessage");
+	let chatRoomMessage = document.getElementById("inMessage").value;
+
+	if (chatRoomMessage.length == 0) { return }
+	websocket.send(
+		JSON.stringify(
+			{
+				Type: "SendChatRoomMessage",
+				Data: { Message: chatRoomMessage }
+			}
+		)
+	);
+	chatRoomMessageElement.value = "";
+}
+
 function RequestLeaveChatRoom() {
 	websocket.send(
 		JSON.stringify(
@@ -205,4 +237,9 @@ function RequestJoinChatRoom(websocket, name, id) {
 			}));
 	console.log(websocket);
 	console.log("cliquei no " + name + " / ID: " + id);
+}
+
+function ClearMessage() {
+	let chatRoomMessageElement = document.getElementById("inMessage");
+	chatRoomMessageElement.value = "";
 }
