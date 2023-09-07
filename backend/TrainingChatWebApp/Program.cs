@@ -20,6 +20,7 @@ internal static class Program
 		
 		var app = builder.Build();
 
+		app.UseFileServer();
 		app.UseWebSockets();
 
 		app.UseCors(AllowedOrigins);
