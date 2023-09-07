@@ -13,7 +13,7 @@ function Initialize(a) {
 	console.log(sessionToken);
 
 	let getuserRequest = new XMLHttpRequest();
-	getuserRequest.open("GET", 'http://localhost:5140/user');
+	getuserRequest.open("GET", '/user');
 	getuserRequest.onloadend = function (e) {
 		switch (getuserRequest.status) {
 			case 200:
@@ -36,7 +36,7 @@ function Initialize(a) {
 
 function ChatConnection(userData) {
 	let sessionToken = localStorage.getItem("sessionToken");
-	let websocket = new WebSocket('ws://localhost:5140/chat-ws', sessionToken);
+	let websocket = new WebSocket(`ws://${window.location.host}/chat-ws`, sessionToken);
 	window.websocket = websocket;
 	websocket.addEventListener("open", (event) => {
 		console.log('Conectou');

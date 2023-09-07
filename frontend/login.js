@@ -10,7 +10,7 @@ function login() {
     console.log(encodedLogin);
 
     let httpRequest = new XMLHttpRequest();
-    let url = 'http://localhost:5140/login';
+    let url = '/login';
     httpRequest.open("GET", url);
     httpRequest.onloadend = function (e) {
         switch (httpRequest.status) {

@@ -25,7 +25,7 @@ function signup() {
     }
 
     let httpRequest = new XMLHttpRequest();
-    let url = 'http://localhost:5140/signup';
+    let url = '/signup';
     let body = JSON.stringify({Name: name, Username: user, Password: password});
     console.log(body);
     httpRequest.open("POST", url);
