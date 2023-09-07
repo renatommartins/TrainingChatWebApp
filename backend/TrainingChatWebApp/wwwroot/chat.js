@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	window.modalInstances = instances;
 });
 document.addEventListener("keydown", (event) => {
-	if (event.isComposing || event.keyCode === 13) {
+	if (!event.isComposing && event.key === "Enter") {
 		RequestSendChatRoomMessage();
 	}
 });
