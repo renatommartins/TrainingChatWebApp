@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
 document.addEventListener("keydown", (event) => {
 	if (!event.isComposing && event.key === "Enter") {
 		RequestSendChatRoomMessage();
+	} else if (event.key === "Escape") {
+		ClearMessage();
 	}
 });
 function Initialize(a) {
