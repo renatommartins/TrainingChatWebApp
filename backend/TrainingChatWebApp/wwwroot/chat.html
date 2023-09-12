@@ -30,10 +30,17 @@
     <div id="container">
         <div class="row" style="height: 100vh; margin: 0;">
             <div class="col s3 grey" style="height: inherit;">
-                <p>Aqui ficam os chats</p>
-                <p>Testando</p>
-                <p>Testando</p>
+                <div style="display: flex; flex-direction:column; height:100%">
+                    <img src="aravipacPipoqueiraLogo.png" alt="Aqui tem uma aravipac" style="margin-top:10%; flex:0 1 auto" />
+                    <p id="showUserName"></p>
+                    <div style="flex: 10 0 0;">
+
+                    </div>
+                    <a class="btn" style="flex: 0 1 0;" onclick="Logout()">Logout</a>
+                    <p>Aravipac Production &copy;</p>
+                </div>
             </div>
+
             <div class="col s9 teal" style="height: 100vh;">
                 <div id="idChatRoomListDiv" class=""
                     style="border-style: solid; border-width: thin; height: 100vh; overflow: hidden;">

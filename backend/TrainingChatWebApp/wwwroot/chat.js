@@ -18,10 +18,12 @@ function Initialize(a) {
 		switch (getuserRequest.status) {
 			case 200:
 				let userData = JSON.parse(getuserRequest.response);
+				let showUserName = document.getElementById("showUserName");
+				showUserName.innerHTML = `Welcome, ${userData.username}`
 				window.userData = userData;
-				console.log(userData);
 				ChatConnection(userData);
 				break;
+			case 400:
 			case 401:
 				window.location.href = 'index.html'
 				break;
@@ -242,4 +244,9 @@ function RequestJoinChatRoom(websocket, name, id) {
 function ClearMessage() {
 	let chatRoomMessageElement = document.getElementById("inMessage");
 	chatRoomMessageElement.value = "";
+}
+
+function Logout() {
+	localStorage.clear();
+	window.location.href = 'index.html'
 }
