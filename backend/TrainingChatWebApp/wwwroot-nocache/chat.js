@@ -107,12 +107,13 @@ function ChatConnection(userData) {
 		console.log("Fechou");
 	});
 }
-function ResponseCreateChatRoom() {
+function ResponseCreateChatRoom(data) {
 	let chatRoomListElement = document.getElementById("idChatRoomListDiv");
 	let joinedChatRoomElement = document.getElementById("idJoinedChatRoom");
 	let chatRoomMessagesElement = document.getElementById("idChatRoomMessages");
 	let chatRoomUsersElement = document.getElementById("idChatRoomUsers");
 	let nameRoom = document.getElementById("inRoomName");
+	let chatNameRoom = document.getElementById("chatNameRoom");
 	let outAlertRoom = document.getElementById("outAlertRoom");
 	window.modalInstances.forEach(element => {
 		if (element.id == "createRoomModal") {
@@ -125,8 +126,10 @@ function ResponseCreateChatRoom() {
 	chatRoomListElement.classList.add("hide");
 	joinedChatRoomElement.classList.remove("hide");
 	nameRoom.value = "";
+	chatNameRoom.innerHTML = data.Name;
 	let newUserElement = chatRoomUsersElement.insertRow();
 	newUserElement.innerHTML = window.userData.name;
+	
 }
 function ResponseLeaveChatRoom() {
 	let chatRoomListElement = document.getElementById("idChatRoomListDiv");
@@ -141,6 +144,7 @@ function ResponseLeaveChatRoom() {
 	joinedChatRoomElement.classList.add("hide");
 
 	window.State = enumState.ListRoom;
+	RequestListChatRoom(window.websocket);
 }
 function ResponseListChatRoom(roomArray) {
 	let tableElement = document.getElementById("idChatRoomListTable");
@@ -165,6 +169,7 @@ function ResponseJoinChatRoom(chatRoomData) {
 	let joinedChatRoomElement = document.getElementById("idJoinedChatRoom");
 	let chatRoomMessagesElement = document.getElementById("idChatRoomMessages");
 	let chatRoomUsersElement = document.getElementById("idChatRoomUsers");
+	let chatNameRoom = document.getElementById("chatNameRoom");
 
 	chatRoomListElement.classList.add("hide");
 	joinedChatRoomElement.classList.remove("hide");
@@ -174,7 +179,7 @@ function ResponseJoinChatRoom(chatRoomData) {
 		newUserElement.id = userName;
 		newUserElement.innerHTML = userName;
 	});
-
+	chatNameRoom.innerHTML = chatRoomData.Name;
 	window.State = enumState.ChatRoom;
 }
 
