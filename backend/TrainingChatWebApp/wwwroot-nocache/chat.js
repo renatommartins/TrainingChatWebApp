@@ -6,8 +6,11 @@ const enumState = {
 
 document.addEventListener('DOMContentLoaded', function () {
 	var elems = document.querySelectorAll('.modal');
+	var elemsSideNav = document.querySelectorAll('.sidenav');
 	var instances = M.Modal.init(elems);
+	var instancesSideNav = M.Sidenav.init(elemsSideNav);
 	window.modalInstances = instances;
+	window.sideNavInstances = instancesSideNav;
 });
 document.addEventListener("keydown", (event) => {
 	if (!event.isComposing && event.key === "Enter") {
