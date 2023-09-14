@@ -1,3 +1,9 @@
+const enumState = {
+	ListRoom: 0,
+	CreateRoom: 1,
+	ChatRoom: 2
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 	var elems = document.querySelectorAll('.modal');
 	var instances = M.Modal.init(elems);
@@ -5,7 +11,18 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 document.addEventListener("keydown", (event) => {
 	if (!event.isComposing && event.key === "Enter") {
-		RequestSendChatRoomMessage();
+		switch (window.State) {
+			case enumState.ListRoom:
+				break;
+			case enumState.CreateRoom:
+				RequestCreateChatRoom();
+				break;
+			case enumState.ChatRoom:
+				RequestSendChatRoomMessage();
+				break;
+			default:
+				break;
+		}		
 	} else if (event.key === "Escape") {
 		ClearMessage();
 	}
@@ -13,7 +30,7 @@ document.addEventListener("keydown", (event) => {
 function Initialize(a) {
 	let sessionToken = localStorage.getItem("sessionToken");
 	console.log(sessionToken);
-
+    window.State = enumState.ListRoom;
 	let getuserRequest = new XMLHttpRequest();
 	getuserRequest.open("GET", '/user');
 	getuserRequest.onloadend = function (e) {
@@ -99,6 +116,7 @@ function ResponseCreateChatRoom() {
 			element.close();
 		}
 	});
+	window.State = enumState.ChatRoom;
 	outAlertRoom.innerHTML = "";
 	chatRoomUsersElement.innerHTML = "";
 	chatRoomListElement.classList.add("hide");
@@ -118,6 +136,8 @@ function ResponseLeaveChatRoom() {
 
 	chatRoomListElement.classList.remove("hide");
 	joinedChatRoomElement.classList.add("hide");
+
+	window.State = enumState.ListRoom;
 }
 function ResponseListChatRoom(roomArray) {
 	let tableElement = document.getElementById("idChatRoomListTable");
@@ -151,6 +171,8 @@ function ResponseJoinChatRoom(chatRoomData) {
 		newUserElement.id = userName;
 		newUserElement.innerHTML = userName;
 	});
+
+	window.State = enumState.ChatRoom;
 }
 
 function NotificationUserLeftChatRoom(userName) {

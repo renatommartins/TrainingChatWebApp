@@ -1,3 +1,10 @@
+document.addEventListener("keydown", (event) => {
+	if (!event.isComposing && event.key === "Enter") {
+		login();
+	} 
+});
+
+
 function login() {
     let user = document.getElementById("inUser").value;
     let passwordElement = document.getElementById("inPassword");
