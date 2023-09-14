@@ -1,3 +1,5 @@
+using Microsoft.Extensions.FileProviders;
+
 namespace TrainingChatWebApp;
 
 internal static class Program
@@ -19,8 +21,24 @@ internal static class Program
 		});
 		
 		var app = builder.Build();
+		var options = new DefaultFilesOptions();
+		options.DefaultFileNames.Clear();
+		options.DefaultFileNames.Add("wwwroot-nocache/index.html");
+		app.UseDefaultFiles(options);
+		
+		app.UseStaticFiles();
+		app.UseStaticFiles(new StaticFileOptions
+		{
+			FileProvider = new PhysicalFileProvider(
+				Path.Combine(builder.Environment.ContentRootPath, "wwwroot-nocache")),
 
-		app.UseFileServer();
+			OnPrepareResponse = ctx =>
+			{
+				ctx.Context.Response.Headers.Append(
+					"Cache-Control", $"no-cache");
+			}
+		});
+
 		app.UseWebSockets();
 
 		app.UseCors(AllowedOrigins);
