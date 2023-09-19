@@ -75,17 +75,50 @@ function ChatConnection(userData) {
 		console.log(event);
 		var response = JSON.parse(event.data);
 		console.log(response);
-
+		
+		if(!response.IsSuccessful) {
+			switch (response.Type) {
+				case "ResponseCreateChatRoom":
+					let outAlertRoom = document.getElementById("outAlertRoom");
+					outAlertRoom.innerHTML = "There's already a room with this name";
+					break;
+				case "ResponseJoinChatRoom":
+					alert('Room does not exist');
+					RequestListChatRoom(window.websocket);
+					break;
+				case "ResponseListChatRoom":
+				case "ResponseLeaveChatRoom":
+				case "ReceiveChatRoomMessage":
+				case "UserJoinedChatRoom":
+				case "UserLeftChatRoom":
+				case "ResponseSendChatRoomMessage":
+					Logout();
+					break;
+			}
+			return;
+		}
+		
 		switch (response.Type) {
 			case "ResponseCreateChatRoom":
+				if(!response.IsSuccessful) {
+					console.log("ARRUMAAAAA");
+					break;
+				}
 				ResponseCreateChatRoom(response.Data);
-				console.log("ResponseCreateChatRoom");
 				break;
 			case "ResponseListChatRoom":
+				if(!response.IsSuccessful) {
+					Logout();
+					break;
+				}
 				console.log("ResponseListChatRoom");
 				ResponseListChatRoom(response.Data.ChatRooms);
 				break;
 			case "ResponseJoinChatRoom":
+				if(!response.IsSuccessful){
+					RequestListChatRoom(window.websocket);
+					break;
+				}
 				console.log("ResponseJoinChatRoom");
 				ResponseJoinChatRoom(response.Data);
 				break;
@@ -219,6 +252,7 @@ function RequestCreateChatRoom() {
 		outAlertRoom.innerHTML = "The name can't be empty"
 		return
 	}
+	outAlertRoom.innerHTML = "";
 	websocket.send(
 		JSON.stringify(
 			{
