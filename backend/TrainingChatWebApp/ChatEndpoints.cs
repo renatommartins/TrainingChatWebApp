@@ -14,7 +14,7 @@ public static class ChatEndpoints
 		app.MapGet("/chat-ws", ChatWebsocket).RequireCors(Program.AllowedOrigins);
 	}
 	
-	private static async Task<IResult> ChatWebsocket (HttpContext context, CancellationToken ct)
+	private static async Task ChatWebsocket (HttpContext context, CancellationToken ct)
 	{
 		var authHeader = "Bearer " + context.Request.Headers.WebSocketSubProtocols;
 		var (result, user, _) =
@@ -27,8 +27,16 @@ public static class ChatEndpoints
 
 		switch (result)
 		{
-			case ResultEnum.InvalidFormat: return Results.BadRequest();
-			case ResultEnum.Unauthorized: return Results.Unauthorized();
+			case ResultEnum.InvalidFormat:
+			{
+				context.Response.StatusCode = StatusCodes.Status400BadRequest;
+				return;
+			}
+			case ResultEnum.Unauthorized:
+			{
+				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+				return;
+			}
 			case ResultEnum.Authenticated:
 				break;
 			default:
@@ -38,7 +46,11 @@ public static class ChatEndpoints
 		if (user is null)
 			throw new InvalidProgramException();
 
-		if (!context.WebSockets.IsWebSocketRequest) return Results.Ok();
+		if (!context.WebSockets.IsWebSocketRequest)
+		{
+			context.Response.StatusCode = StatusCodes.Status204NoContent;
+			return;
+		}
 		
 		using var webSocket = await context.WebSockets.AcceptWebSocketAsync(context.Request.Headers.WebSocketSubProtocols);
 		
@@ -221,7 +233,5 @@ public static class ChatEndpoints
 			ChatRoom.GetUserChatRoom(userConnection.User)?.LeaveChatRoom(userConnection);
 			UserConnection.UserSessions.Remove(userConnection.User.Key);
 		}
-
-		return Results.Ok();
 	}
 }
