@@ -143,7 +143,7 @@ public static class ChatEndpoints
 						{
 							userConnection.Send(
 								ServerMessage
-									.CreateErrorMessage<ServerMessage.ResponseCreateChatRoom>(
+									.CreateErrorMessage<ServerMessage.ResponseJoinChatRoom>(
 										"There is already a chat room with this name")
 									.SerializeToBytes(jsonOptions));
 							break;
