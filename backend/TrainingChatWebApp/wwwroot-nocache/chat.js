@@ -56,7 +56,12 @@ function Initialize(a) {
 	};
 	getuserRequest.setRequestHeader("Authorization", 'Bearer ' + sessionToken,);
 	getuserRequest.send();
-};
+}
+
+function OpenCreateModal() {
+	setTimeout(function (){ document.getElementById("inRoomName").focus(); }, 250);
+	window.State = enumState.CreateRoom
+}
 
 function ChatConnection(userData) {
 	let sessionToken = localStorage.getItem("sessionToken");
@@ -129,7 +134,7 @@ function ResponseCreateChatRoom(data) {
 	chatNameRoom.innerHTML = data.Name;
 	let newUserElement = chatRoomUsersElement.insertRow();
 	newUserElement.innerHTML = window.userData.name;
-	
+	document.getElementById("inMessage").focus();
 }
 function ResponseLeaveChatRoom() {
 	let chatRoomListElement = document.getElementById("idChatRoomListDiv");
@@ -181,6 +186,7 @@ function ResponseJoinChatRoom(chatRoomData) {
 	});
 	chatNameRoom.innerHTML = chatRoomData.Name;
 	window.State = enumState.ChatRoom;
+	document.getElementById("inMessage").focus();
 }
 
 function NotificationUserLeftChatRoom(userName) {
