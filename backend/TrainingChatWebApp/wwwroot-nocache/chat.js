@@ -32,7 +32,6 @@ document.addEventListener("keydown", (event) => {
 });
 function Initialize(a) {
 	let sessionToken = localStorage.getItem("sessionToken");
-	console.log(sessionToken);
     window.State = enumState.ListRoom;
 	let getuserRequest = new XMLHttpRequest();
 	getuserRequest.open("GET", '/user');
@@ -50,7 +49,7 @@ function Initialize(a) {
 				window.location.href = 'index.html'
 				break;
 			case 500:
-				console.log("Our server is out");
+				Logout();
 				break;
 		}
 	};
@@ -68,13 +67,10 @@ function ChatConnection(userData) {
 	let websocket = new WebSocket(`ws://${window.location.host}/chat-ws`, sessionToken);
 	window.websocket = websocket;
 	websocket.addEventListener("open", (event) => {
-		console.log('Conectou');
 		RequestListChatRoom(websocket);
 	});
 	websocket.addEventListener("message", (event) => {
-		console.log(event);
 		var response = JSON.parse(event.data);
-		console.log(response);
 		
 		if(!response.IsSuccessful) {
 			switch (response.Type) {
@@ -100,26 +96,12 @@ function ChatConnection(userData) {
 		
 		switch (response.Type) {
 			case "ResponseCreateChatRoom":
-				if(!response.IsSuccessful) {
-					console.log("ARRUMAAAAA");
-					break;
-				}
 				ResponseCreateChatRoom(response.Data);
 				break;
 			case "ResponseListChatRoom":
-				if(!response.IsSuccessful) {
-					Logout();
-					break;
-				}
-				console.log("ResponseListChatRoom");
 				ResponseListChatRoom(response.Data.ChatRooms);
 				break;
 			case "ResponseJoinChatRoom":
-				if(!response.IsSuccessful){
-					RequestListChatRoom(window.websocket);
-					break;
-				}
-				console.log("ResponseJoinChatRoom");
 				ResponseJoinChatRoom(response.Data);
 				break;
 			case "ResponseLeaveChatRoom":
@@ -129,20 +111,17 @@ function ChatConnection(userData) {
 				NotificationReceiveChatRoomMessage(response.Data);
 				break;
 			case "UserJoinedChatRoom":
-				console.log("UserJoinedChatRoom");
 				NotificationUserJoined(response.Data.UserName);
 				break;
 			case "UserLeftChatRoom":
-				console.log("UserLeftChatRoom");
 				NotificationUserLeftChatRoom(response.Data.UserName);
 				break;
 			case "ResponseSendChatRoomMessage":
-				console.log("ResponseSendChatRoomMessage");
 				break;
 		}
 	});
 	websocket.addEventListener("close", (event) => {
-		console.log("Fechou");
+		alert("Server is unreachable");
 	});
 }
 function ResponseCreateChatRoom(data) {
@@ -189,7 +168,6 @@ function ResponseListChatRoom(roomArray) {
 	let tableBodyElement = tableElement.getElementsByTagName("tbody")[0];
 	tableBodyElement.innerHTML = "";
 	for (let i = 0; i < roomArray.length; i++) {
-		console.log(roomArray[i]);
 		let newElement = tableBodyElement.insertRow();
 		newElement.innerHTML = roomArray[i].Name;
 		newElement.onclick = function () { RequestJoinChatRoom(window.websocket, roomArray[i].Name, roomArray[i].Id) };
@@ -227,7 +205,6 @@ function NotificationUserLeftChatRoom(userName) {
 	let tableBodyElement = chatRoomUsersElement.getElementsByTagName("tbody")[0];
 
 	for (let i = 0; i < tableBodyElement.rows.length; i++) {
-		console.log(tableBodyElement.rows[i].id);
 		if (tableBodyElement.rows[i].id == userName) {
 			tableBodyElement.deleteRow(i);
 			break;
@@ -259,9 +236,6 @@ function RequestCreateChatRoom() {
 				Type: "CreateChatRoom",
 				Data: { Name: nameRoom }
 			}));
-	console.log(websocket);
-	console.log("Sala " + nameRoom + " criada!");
-
 }
 
 function RequestSendChatRoomMessage() {
@@ -309,8 +283,6 @@ function RequestJoinChatRoom(websocket, name, id) {
 					Id: id,
 				}
 			}));
-	console.log(websocket);
-	console.log("cliquei no " + name + " / ID: " + id);
 }
 
 function ClearMessage() {
