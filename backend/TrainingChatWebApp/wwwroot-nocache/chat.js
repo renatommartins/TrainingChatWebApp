@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
 	var instancesSideNav = M.Sidenav.init(elemsSideNav);
 	window.modalInstances = instances;
 	window.sideNavInstances = instancesSideNav;
+
+	window.modalInstances.forEach(element => {
+		if (element.id == "disconnectedModal") {
+			element.options.dismissible = false;
+		}
+	});
 });
 document.addEventListener("keydown", (event) => {
 	if (!event.isComposing && event.key === "Enter") {
@@ -121,7 +127,11 @@ function ChatConnection(userData) {
 		}
 	});
 	websocket.addEventListener("close", (event) => {
-		alert("Server is unreachable");
+		window.modalInstances.forEach(element => {
+			if (element.id == "disconnectedModal") {
+				element.open();
+			}
+		});
 	});
 }
 function ResponseCreateChatRoom(data) {
