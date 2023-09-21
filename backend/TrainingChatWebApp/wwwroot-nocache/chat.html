@@ -6,23 +6,24 @@
     <link rel="icon" type="image/x-icon" href="aravipacPipoqueiraLogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title>Aravipac</title>
 </head>
 
-<body onload="Initialize()" style="overflow-y: hidden;">
+<body onload="Initialize()">
     <div id="createRoomModal" class="modal">
         <div class="modal-content">
             <h5>Create Chat Room</h5>
             <label for="inRoomName">Chat Room Name</label>
             <input type="text" name="inRoomName" id="inRoomName">
             <pre id="outAlertRoom"></pre>
-            <div class="row" style="margin-bottom: 0;">
+            <div class="row aravipac-modalchat">
                 <div class="col s2 offset-s8">
-                    <a class="btn blue-grey" style="width: 100%" onclick="RequestCreateChatRoom()">Create</a>
+                    <a class="btn blue-grey aravipac-modalbtn" onclick="RequestCreateChatRoom()">Create</a>
                 </div>
                 <div class="col s2">
-                    <a class="modal-close btn blue-grey" style="width: 100%">Close</a>
+                    <a class="modal-close btn blue-grey aravipac-modalbtn">Close</a>
                 </div>
             </div>
         </div>
@@ -32,92 +33,72 @@
             <p style="text-align: center;">Server has disconnected</p>
             <div class="row" style="margin-bottom: 0;">
                 <div class="col s3">
-                    <btn class="btn blue-grey" style="width: 100%" onclick="Logout()">Logout</btn>
+                    <btn class="btn blue-grey aravipac-modalbtn" onclick="Logout()">Logout</btn>
                 </div>
                 <div class="col s3 offset-s6">
-                    <btn class="btn blue-grey" style="width: 100%" onclick="location.reload()">Reconnect</btn>
+                    <btn class="btn blue-grey aravipac-modalbtn" onclick="location.reload()">Reconnect</btn>
                 </div>
             </div>
         </div>
     </div>
-    <div class="sidenav grey" id="slide-out" style="height: 100vh;">
-        <div style="display: flex; flex-direction:column; align-items: center; height:100%">
-            <img src="aravipacPipoqueiraLogo.png" alt="Aqui tem uma aravipac" style="margin-top:10%; flex:0 1 auto; width: 90%" />
+    <div class="sidenav grey aravipac-sidenav" id="slide-out">
+        <div class="aravipac-sidenavcontent">
+            <img src="aravipacPipoqueiraLogo.png" class="aravipac-sidenavlogo" alt="Aqui tem uma aravipac"/>
             <p id="showUserName"></p>
-            <div style="flex: 10 0 0;">
-
-            </div>
-            <a class="btn blue-grey" style="flex: 0 1 0; width: 80%;" onclick="Logout()">Logout</a>
+            <div class="aravipac-sidenavfiller"></div>
+            <a class="btn blue-grey aravipac-sidenavbtn" onclick="Logout()">Logout</a>
             <p>Aravipac Production &copy;</p>
         </div>                
     </div>
-    <div id="container" style="display: flex; flex-direction: row; height:100vh">
+    <div id="container">
         <div class="grey" style="flex:0 1 0; height: 100vh;">
-            <a data-target="slide-out" class="waves-effect waves-light sidenav-trigger" style="margin: 10px;"><i style="color:black" class="material-icons">dehaze</i></a>
+            <a data-target="slide-out" class="waves-effect waves-light sidenav-trigger aravipac-hamburguer">
+                <i style="color:black" class="material-icons">dehaze</i>
+            </a>
         </div>
-        <div style="flex:10 1 0; height:100vh; margin: 0;">             
-            <div class="blue-grey lighten-1" style="height: 100vh;">
-                <div id="idChatRoomListDiv" class=""
-                    style="border-style: solid; border-width: thin; height: 100vh; overflow: hidden;">
-                    <div
-                        style="display: flex; flex-direction: row; border-bottom: thin solid black; height: 15%; width: 100%;">
-                        <div style="flex: 8 0 0;">
-                            <h2 style="font-size: large; padding-left: 2.5%;">
-                                Chat Room List
-                            </h2>
-                        </div>
-                        <div style="flex: 3 1 1; align-self: center;">
-                            <button data-target="createRoomModal"
-                                class="waves-effect blue-grey btn modal-trigger blue-grey" onclick="OpenCreateModal()">Create Room</button>
-                        </div>
-                        <div style="flex: 0 1 0; align-self: center; padding: 2.5%;">
-                            <a class="btn blue-grey" style="flex-grow: 1;"
-                                onclick="RequestListChatRoom(window.websocket)">Refresh</a>
-                        </div>
-                    </div>
-                    <div style="overflow-y: scroll; height: 85%; max-height: 85%;">
-                        <table id="idChatRoomListTable" class="highlight">
-                            <tbody></tbody>
-                        </table>
-                    </div>
+        <div class="blue-grey lighten-1 aravipac-spacontainer">             
+            <div id="idChatRoomListDiv">
+                <div class="aravipac-chatlistheader">
+                    <h2 class="aravipac-chatlisttitle">
+                        Chat Room List
+                    </h2>
+                    <button class="waves-effect blue-grey btn blue-grey" onclick="OpenCreateModal()">
+                        Create Room
+                    </button>
+                    <button class="btn blue-grey" onclick="RequestListChatRoom(window.websocket)">Refresh</button>
                 </div>
-                <div id="idJoinedChatRoom" class="hide" style="height: 100vh;">
-                    <div style="display: flex; flex-direction: column; height: 100%;">
-                        <div style="display: flex; flex-direction: row; flex: 0 1 0;">
-                            <div style="flex: 8 1 0">
-                                <h2 id="chatNameRoom" style="font-size: large; padding-left: 2.5%;">
-                                    
-                                </h2>
-                            </div>
-                            <div style="flex: 3 1 1; align-self: center;">
-                                <a class="btn blue-grey" onclick="RequestLeaveChatRoom()">Leave Room</a>
-                            </div>
+                <div class="aravipac-chatlistroom">
+                    <table id="idChatRoomListTable" class="highlight">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="idJoinedChatRoom" class="hide">
+                <div class="aravipac-chatroomcontainer">
+                    <div class="aravipac-chatroomheader">
+                        <h2 id="chatNameRoom"></h2>
+                        <a class="btn blue-grey" onclick="RequestLeaveChatRoom()">Leave Room</a>
+                    </div>
+                    <div class="aravipac-chatmessagecontainer">
+                        <div class="aravipac-chatroommessages">
+                            <table id="idChatRoomMessages" class="strip">
+                                <tbody>
+                                </tbody>
+                            </table>
                         </div>
-                        <div style="display: flex; flex-direction: row; flex: 1 0 0; border: thin solid black; height: 80%;">
-                            <div style="flex: 1 1 0; overflow-y: scroll; height: 100%; max-height: 100%; display: flex; flex-direction: column-reverse;">
-                                <table id="idChatRoomMessages" class="strip">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div
-                                style="flex: 0 0 25%; overflow-y: scroll; height: 100%; max-height: 100%; margin-left: 0.5%; padding-left: 0.5%; border-left: thin solid black;">
-                                <table id="idChatRoomUsers" class="strip">
-                                    <tbody></tbody>
-                                </table>
-                            </div>
+                        <div class="aravipac-chatroomusers">
+                            <table id="idChatRoomUsers" class="strip">
+                                <tbody></tbody>
+                            </table>
                         </div>
-                        <div style="display: flex; flex-direction: row; flex: 0 1 0;">
-                            <div class="input-field" style="flex: 1 1 0">
-                                <label style="color: black;"; for="inMessage">Message</label>
-                                <input type="text" name="inMessage" id="inMessage">
-                            </div>
-                            <a class="btn-floating blue-grey" onclick="ClearMessage()" style="align-self:  center;"><i
-                                    class="material-icons">clear</i></a>
-                            <div style="flex: 0 0 0; align-self: center;">
-                                <a class="btn blue-grey" onclick="RequestSendChatRoomMessage()">Send</a>
-                            </div>
+                    </div>
+                    <div class="aravipac-chatroomfooter">
+                        <div class="input-field aravipac-chatroomsendercontainer">
+                            <label style="color: black;"; for="inMessage">Message</label>
+                            <input type="text" name="inMessage" id="inMessage">
                         </div>
+                        <a class="btn-floating blue-grey" onclick="ClearMessage()"><i class="material-icons">clear</i></a>
+                        <a class="btn blue-grey aravipac-sendchatmsg" onclick="RequestSendChatRoomMessage()">Send</a>
                     </div>
                 </div>
             </div>

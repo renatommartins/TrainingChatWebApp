@@ -1,0 +1,143 @@
+﻿body {
+    overflow-y: hidden;
+}
+div.aravipac-modalchat {
+    margin-bottom: 0;
+}
+a.aravipac-modalbtn {
+    width: 100%;
+}
+div.aravipac-sidenav {
+    height: 100vh;
+}
+div.aravipac-sidenavcontent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+img.aravipac-sidenavlogo {
+    margin-top: 10%;
+    flex: 0 1 auto;
+    width: 90%;
+}
+div.aravipac-sidenavfiller {
+    flex: 10 0 0;
+}
+a.aravipac-sidenavbtn {
+    flex: 0 1 0;
+    width: 80%;
+}
+div#container {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+}
+a.aravipac-hamburguer {
+    margin: 10px;
+}
+div.aravipac-spacontainer {
+    flex: 10 1 0;
+    height: 100vh;
+    margin: 0;
+}
+div#idChatRoomListDiv {
+    border-style: solid;
+    border-width: thin;
+    height: 100vh;
+    overflow: hidden;
+}
+div.aravipac-chatlistheader {
+    display: flex;
+    flex-direction: row;
+    border-bottom: thin solid black;
+    height: 15%;
+    width: 100%;
+    align-items:center;
+}
+h2.aravipac-chatlisttitle {
+    flex: 8 0 0;
+    font-size: large;
+    padding-left: 2.5%;
+}
+
+    div.aravipac-chatlistheader>button {
+        flex: 0 1 1;
+        margin: 15px;
+    }
+
+div.aravipac-chatlistroom {
+    overflow-y: scroll;
+    height: 85%;
+    max-height: 85%;
+    background-color: white;
+}
+div#idJoinedChatRoom {
+    height: 100vh;
+}
+div.aravipac-chatroomcontainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+div.aravipac-chatroomheader {
+    display: flex;
+    flex-direction: row;
+    flex: 0 1 0;
+}
+    div.aravipac-chatroomheader > h2 {
+        flex: 8 1 0;
+        font-size: large;
+        padding-left: 2.5%;
+    }
+    div.aravipac-chatroomheader > a {
+        flex: 3 1 1;
+        align-self: center;
+        margin: 15px;
+    }
+div.aravipac-chatmessagecontainer {
+    display: flex;
+    flex-direction: row;
+    flex: 1 0 0;
+    border: thin solid black;
+    height: 80%;
+    margin-left: 5px;
+    background-color: white;
+}
+div.aravipac-chatroommessages {
+    flex: 1 1 0;
+    overflow-y: scroll;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    background-color: white;
+}
+div.aravipac-chatroomusers {
+    flex: 0 0 25%;
+    overflow-y: scroll;
+    height: 100%;
+    max-height: 100%;
+    margin-left: 0.5%;
+    padding-left: 0.5%;
+    border-left: thin solid black;
+}
+div.aravipac-chatroomfooter {
+    display: flex;
+    flex-direction: row;
+    flex: 0 1 0;
+}
+div.aravipac-chatroomsendercontainer{
+    margin-left:5px;
+}
+    div.aravipac-chatroomfooter > div {
+        flex: 1 1 0;
+    }
+    div.aravipac-chatroomfooter > a {
+        align-self: center;
+    }
+a.aravipac-sendchatmsg {
+    flex: 0 0 0;
+    margin: 5px;
+    border-radius: 20%;
+}

@@ -64,8 +64,15 @@ function Initialize(a) {
 }
 
 function OpenCreateModal() {
+
+	window.modalInstances.forEach(element => {
+		if (element.id == "createRoomModal") {
+			element.open();
+		}
+	});
 	setTimeout(function (){ document.getElementById("inRoomName").focus(); }, 250);
-	window.State = enumState.CreateRoom
+	window.State = enumState.CreateRoom;
+
 }
 
 function ChatConnection(userData) {
