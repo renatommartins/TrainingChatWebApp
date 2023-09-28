@@ -6,45 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="aravipacPipoqueiraLogo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="style.css">
     <title>Sign Up Aravipac</title>
 </head>
 
 <body class="blue-grey lighten-1">
     <div class="container">
-        <h1 class="row" style="font-size: 30px; text-align: center; margin-bottom: 10% ;">
+        <h1 class="row">
             Aravipac Chat Corp
         </h1>
-        <h2 class="row" style="font-size: 24px; text-align: left;">
+        <h2 class="row">
             Sign Up
         </h2>
         <div class="row">
             <div class="input-field row">
-                <label style="color:black;" for="inName">Name</label>
+                <label class="aravipac-input" for="inName">Name</label>
                 <input type="text" name="inName" id="inName">
             </div>
             <div class="input-field row">
-                <label style="color:black" for="inUser">User</label>
+                <label class="aravipac-input" for="inUser">User</label>
                 <input type="text" name="inUser" id="inUser">
             </div>
             <div class="input-field row">
-                <label style="color:black" for="inPassword">Password</label>
+                <label class="aravipac-input" for="inPassword">Password</label>
                 <input type="password" name="inPassword" id="inPassword">
             </div>
             <div class="input-field row">
-                <label style="color:black" for="inConfirmPassword">Confirm Password</label>
+                <label class="aravipac-input" for="inConfirmPassword">Confirm Password</label>
                 <input type="password" name="inConfirmPassword" id="inConfirmPassword">
             </div>
             <div class="row hide" id="cardAlert">
                 <div class="col s10 offset-s1">
                     <div class="card-panel red lighten-3">
-                        <pre style="text-align: center;" id="outAlert"></pre>
+                        <pre id="outAlert"></pre>
                     </div>
                 </div>
             </div>
             <div class="row hide" id="cardSuccess">
                 <div class="col s10 offset-s1">
                     <div class="card-panel green lighten-3">
-                        <pre style="text-align: center;" id="successCreate"></pre>
+                        <pre id="successCreate"></pre>
                     </div>
                 </div>
             </div>

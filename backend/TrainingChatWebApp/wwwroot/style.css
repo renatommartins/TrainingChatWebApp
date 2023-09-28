@@ -1,4 +1,4 @@
-﻿body {
+body {
     overflow-y: hidden;
 }
 div.aravipac-modalchat {
@@ -28,7 +28,7 @@ a.aravipac-sidenavbtn {
     flex: 0 1 0;
     width: 80%;
 }
-div#container {
+div#chat-container {
     display: flex;
     flex-direction: row;
     height: 100vh;
@@ -140,4 +140,23 @@ a.aravipac-sendchatmsg {
     flex: 0 0 0;
     margin: 5px;
     border-radius: 20%;
+}
+
+h1 {
+    font-size: 30px;
+    text-align: center;
+    margin-bottom: 10%;
+}
+
+h2 {
+    font-size: 24px;
+    text-align: left;
+}
+
+label.aravipac-input {
+    color:black;
+}
+
+div>pre {
+    text-align: center;
 }
