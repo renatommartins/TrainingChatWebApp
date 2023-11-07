@@ -28,5 +28,8 @@
     <ItemGroup>
         <None Include="wwwroot-nocache\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="wwwroot-nocache" />
+    </ItemGroup>
 
 </Project>

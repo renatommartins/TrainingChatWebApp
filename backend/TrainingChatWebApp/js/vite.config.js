@@ -6,12 +6,15 @@ export default defineConfig({
     build:{
         rollupOptions:{
             input:{
-                app: "./index_test.html"
+                login: "./login.html",
+                chat: "./chat.html",
+                signup: "./signup.html",
             },
             output:{
                 dir: "../wwwroot-nocache/"
             }
-        }
+        },
+        sourcemap: true,
     },
     plugins: [svelte()],
 })
