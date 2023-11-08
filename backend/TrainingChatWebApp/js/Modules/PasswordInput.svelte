@@ -1,7 +1,6 @@
 ﻿<script>
     import Materialize from "materialize-css"
     
-    export let placeholder;
     export let id;
     export let label_text;
     export let input_text;

@@ -1,10 +1,10 @@
 ﻿<script>
 import Materialize from "materialize-css"
 
-import TextInput from "../../Modules/TextInput.svelte";
-import PasswordInput from "../../Modules/PasswordInput.svelte";
-import Alert from "../../Modules/Alert.svelte";
-import Button from "../../Modules/Button.svelte";
+import TextInput from "Modules/TextInput.svelte";
+import PasswordInput from "Modules/PasswordInput.svelte";
+import Alert from "Modules/Alert.svelte";
+import Button from "Modules/Button.svelte";
 
 let name = "";
 let name_enabled = true;
@@ -18,10 +18,10 @@ let password_enabled = true;
 let confirm_password = "";
 let confirm_password_enabled = true;
 
+const alert_success = "#A5D6A7";
+const alert_failure = "#EF9A9A";
 let alert_text = "";
 let alert_is_visible = false;
-let alert_success = "#A5D6A7";
-let alert_failure = "#EF9A9A";
 let alert_current_color = alert_success;
 
 let signup_button_enabled = true;

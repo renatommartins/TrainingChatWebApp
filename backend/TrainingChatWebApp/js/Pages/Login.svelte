@@ -1,10 +1,10 @@
 ﻿<script>
     import Materialize from "materialize-css";
     
-    import TextInput from "../../Modules/TextInput.svelte";
-    import PasswordInput from "../../Modules/PasswordInput.svelte";
-    import Button from "../../Modules/Button.svelte";
-    import Alert from "../../Modules/Alert.svelte";
+    import TextInput from "Modules/TextInput.svelte";
+    import PasswordInput from "Modules/PasswordInput.svelte";
+    import Button from "Modules/Button.svelte";
+    import Alert from "Modules/Alert.svelte";
 
     let username = "";
     let password = "";
@@ -55,14 +55,12 @@
         <TextInput
                 bind:input_text={username}
                 id="inUser"
-                label_text="User"
-                placeholder="User">
+                label_text="User">
         </TextInput>
         <PasswordInput
                 bind:input_text={password}
                 id="inPassword"
-                label_text="Password"
-                placeholder="Password">
+                label_text="Password">
         </PasswordInput>
         <div class="row">
             <div class="col s10 offset-s1">
