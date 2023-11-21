@@ -167,8 +167,12 @@ public static class ChatEndpoints
 						{
 							Id = chatRoom.Id,
 							Name = chatRoom.Name,
-							UserNames = chatRoom.Users
-								.Select(u => u.Value.User.Name)
+							Users = chatRoom.Users
+								.Select(u => new ServerMessage.JoinedUsers
+								{
+									Id = u.Value.User.Key,
+									Name = u.Value.User.Name,
+								})
 								.ToArray(),
 						}).SerializeToBytes(jsonOptions));
 						break;

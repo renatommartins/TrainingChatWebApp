@@ -1,10 +1,14 @@
 ﻿<script>
     import Materialize from "materialize-css";
     
+    import RestApi from "Modules/RestApi.svelte";
+    
     import TextInput from "Modules/TextInput.svelte";
     import PasswordInput from "Modules/PasswordInput.svelte";
     import Button from "Modules/Button.svelte";
     import Alert from "Modules/Alert.svelte";
+    
+    let Login;
 
     let username = "";
     let password = "";
@@ -13,40 +17,34 @@
     
     let login_button_handler = function() {
         alert_is_visible = false;
-        let encodedLogin = "Basic " + btoa(username + ":" + password);
-        console.log(encodedLogin);
 
-        let httpRequest = new XMLHttpRequest();
-        let url = '/login';
-        httpRequest.open("GET", url);
-        httpRequest.onloadend = function (e) {
-            switch (httpRequest.status) {
-                case 200:
-                    let session = JSON.parse(httpRequest.response).sessionId;
-                    localStorage.setItem("sessionToken", session);
-                    window.location.href = "/chat.html"
-                    break;
-                case 401:
-                    password = '';
-                    alert_text = "Incorrect user or password";
-                    alert_is_visible = true;
-                    break;
-                case 500:
-                    alert_text = "Our server is out";
-                    alert_is_visible = true;
+        Login(
+            username,
+            password,
+            function (response) {
+                localStorage.setItem("sessionToken", response.session);
+                window.location.href = "/chat.html"
+            },
+            function (response) {
+                switch (response.statusCode) {
+                    case 401:
+                        password = '';
+                        alert_text = "Incorrect user or password";
+                        alert_is_visible = true;
+                        break;
+                    case 500:
+                        alert_text = "Our server is out";
+                        alert_is_visible = true;
+                }
             }
-        };
-        httpRequest.setRequestHeader(
-            "Authorization",
-            encodedLogin,
         );
-        httpRequest.send();
     };
     
     let signup_button_handler = function() {
         window.location.href = '/signup.html';
     };
 </script>
+<RestApi bind:Login></RestApi>
 
 <div class="container app-body">
     <h1 class="row">Aravipac Chat Corp</h1>

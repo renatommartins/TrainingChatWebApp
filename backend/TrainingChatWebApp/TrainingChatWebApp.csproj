@@ -17,7 +17,7 @@
       <ProjectReference Include="..\TrainingChatApp.Models\TrainingChatApp.Models.csproj" />
     </ItemGroup>
 
-    <Target Name="Vite" BeforeTargets="Build">
+    <Target Name="Vite" BeforeTargets="Build" Condition="'$(Configuration)'=='Debug'">
         <Exec Command="npm install -w js" />
         <Exec Command="npm run -w js build --base=../wwwroot-nocache/" />
     </Target>

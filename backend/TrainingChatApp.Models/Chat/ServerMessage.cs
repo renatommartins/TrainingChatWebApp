@@ -85,11 +85,13 @@ public class ServerMessage
 	
 	public class UserLeftChatRoom : ServerData
 	{
+		public int Id { get; set; }
 		public string UserName { get; set; }
 	}
 
 	public class UserJoinedChatRoom : ServerData
 	{
+		public int Id { get; set; }
 		public string UserName { get; set; }
 	}
 
@@ -111,11 +113,16 @@ public class ServerMessage
 		public string Name { get; set; }
 	}
 
+	public class JoinedUsers
+	{
+		public int Id { get; set; }
+		public string Name { get; set; }
+	}
 	public class ResponseJoinChatRoom : ServerData
 	{
 		public int Id { get; set; }
 		public string Name { get; set; }
-		public string[] UserNames { get; set; }
+		public JoinedUsers[] Users { get; set; }
 	}
 
 	public class ResponseListChatRoom : ServerData

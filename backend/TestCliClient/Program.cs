@@ -132,7 +132,7 @@ class Program
 			case ServerMessage.DataType.ResponseJoinChatRoom:
 				var joinResponse = serverMessage.Deserialize<ServerMessage.ResponseJoinChatRoom>(_jsonOptions);
 				var joinBuilder = new StringBuilder();
-				foreach (var userName in joinResponse.UserNames)
+				foreach (var userName in joinResponse.Users.Select(u => u.Name))
 				{
 					joinBuilder.Append(userName);
 					joinBuilder.Append(", ");

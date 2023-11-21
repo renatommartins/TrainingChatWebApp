@@ -100,6 +100,7 @@ public class ChatRoom
 				ServerMessage.CreateMessage(
 					new ServerMessage.UserJoinedChatRoom
 					{
+						Id = newConnection.User.Key,
 						UserName = newConnection.User.Name,
 					}).SerializeToBytes(jsonOptions));
 		}
@@ -117,6 +118,7 @@ public class ChatRoom
 				ServerMessage.CreateMessage(
 					new ServerMessage.UserLeftChatRoom
 					{
+						Id = leavingConnection.User.Key,
 						UserName = leavingConnection.User.Name,
 					}).SerializeToBytes(jsonOptions));
 		}

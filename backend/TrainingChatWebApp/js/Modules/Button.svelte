@@ -8,5 +8,7 @@
 <button class="waves-effect btn-small blue-grey" on:click disabled={!enabled}>{button_label}</button>
 
 <style>
-    
+    button {
+        width: 100%;
+    }
 </style>
