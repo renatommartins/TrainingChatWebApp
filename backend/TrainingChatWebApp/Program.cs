@@ -1,4 +1,5 @@
 using Microsoft.Extensions.FileProviders;
+using TrainingChatWebApp.Services;
 
 namespace TrainingChatWebApp;
 
@@ -19,7 +20,7 @@ internal static class Program
 					policy.WithHeaders("Authorization","Content-type");
 				});
 		});
-		
+		builder.Services.AddScoped<IUserService, UserService>();
 		var app = builder.Build();
 		var options = new DefaultFilesOptions();
 		options.DefaultFileNames.Clear();

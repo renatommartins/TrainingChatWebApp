@@ -9,11 +9,18 @@ using TrainingChatWebApp.Database.Models;
 using TrainingChatWebApp.Services;
 using TrainingChatWebApp.Services.Enums;
 using TrainingChatWebApp.Utils;
+using System.Linq.Expressions;
 
 namespace TrainingChatWebApp;
 
-public static class UserEndpoints
+public class UserEndpoints
 {
+    private readonly IUserService userService;
+
+    public UserEndpoints(IUserService userService)
+	{
+        this.userService = userService;
+    }
 	public static void MapEndpoints(WebApplication app)
 	{
 		app.MapPost("/signup", SignupUser).RequireCors(Program.AllowedOrigins);
@@ -22,65 +29,20 @@ public static class UserEndpoints
 		app.MapGet("/user", GetUser).RequireCors(Program.AllowedOrigins);
 	}
 
-	private static async Task<IResult> SignupUser(HttpContext context, [FromBody] SignupModel signupModel)
+	private IResult SignupUser(HttpContext context, [FromBody] SignupModel signupModel)
 	{
-		await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+		var resultSignUp = userService.SignUp(signupModel);
+        switch (resultSignUp)
+        {
+            case SignUpEnum.UserAlreadyExists:
+                return Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
+            case SignUpEnum.UserCreated:
+                return Results.Ok();
+			default: throw new NotImplementedException();
+        }
+    }
 
-		var userCheck = (await connection.QueryAsync<User>("""
-					SELECT u.Username
-					FROM TrainingChatApp.Users u
-					WHERE Username = @Username
-					LIMIT 1
-				""", new {Username = signupModel.Username})).FirstOrDefault();
-
-		if (userCheck is not null)
-		{
-			unsafe
-			{
-				fixed (char* authPointer = signupModel.Password)
-					for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
-						*currentChar = '\0';
-			}
-			return Results.Problem(detail: "User already exists", statusCode: (int) HttpStatusCode.Conflict);
-		}
-		
-		var passwordBuffer = new byte[128];
-		var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
-
-		for (var i = 0; i < signupModel.Password.Length; i++)
-		{
-			passwordBuffer[i] = (byte)signupModel.Password[i];
-		}
-		
-		unsafe
-		{
-			fixed (char* authPointer = signupModel.Password)
-				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
-					*currentChar = '\0';
-		}
-		
-		var hasher = new Argon2id(passwordBuffer);
-		hasher.DegreeOfParallelism = 8;
-		hasher.MemorySize = 16 * 1024;
-		hasher.Iterations = 10;
-		hasher.Salt = salt;
-
-		var hash = await hasher.GetBytesAsync(16);
-		
-		Array.Fill(passwordBuffer, (byte)0x00);
-
-		var rowsAffected = await connection.ExecuteAsync("""
-					INSERT INTO TrainingChatApp.Users (Username, Name, PasswordHash, Salt)
-					VALUES (@Username, @Name, @Password, @Salt)
-				""", new {Username = signupModel.Username, Name = signupModel.Name, Password = hash, Salt = salt});
-
-		if (rowsAffected != 1)
-			throw new Exception();
-
-		return Results.Ok();
-	}
-
-	private static IResult LoginEndpoint([FromHeader(Name = "Authorization")] string authorization)
+    private IResult LoginEndpoint([FromHeader(Name = "Authorization")] string authorization)
 	{
 		var authorizationBytes = new byte[256];
 
@@ -128,90 +90,42 @@ public static class UserEndpoints
 				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
 					*currentChar = '\0';
 		}
-
-		using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
-		var user = (connection.Query<User>("""
-					SELECT *
-					FROM TrainingChatApp.Users
-					WHERE Username = @username
-					LIMIT 1
-				""", new {username = username})).FirstOrDefault();
-
-		if (user is null)
+        var session = userService.Login(username, passwordBuffer);
+        if (session is null)
+        {
+            return Results.Unauthorized();
+        } else
 		{
-			return Results.Unauthorized();
-		}
+			return Results.Ok(new { SessionId = session.SessionId });
+        }
+    }
 
-		var hasher = new Argon2id(passwordBuffer);
-		hasher.DegreeOfParallelism = 8;
-		hasher.MemorySize = 16 * 1024;
-		hasher.Iterations = 10;
-		hasher.Salt = user.Salt;
-
-		var hash = hasher.GetBytes(16);
-
-		Array.Fill(passwordBuffer, (byte) 0, 0, passwordBuffer.Length);
-
-		for (var i = 0; i < 16; i++)
-		{
-			if (hash[i] == user.PasswordHash[i]) continue;
-			return Results.Unauthorized();
-		}
-
-		var session = new Session
-		{
-			UserKey = user.Key,
-			SessionId = Guid.NewGuid(),
-			ExpiresAt = DateTime.UtcNow.AddHours(16),
-		};
-
-		connection.Execute("""
-					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId, ExpiresAt)
-					VALUES (@UserKey, @SessionID, @ExpiresAt)
-				""", new {UserKey = session.UserKey, SessionId = session.SessionId, ExpiresAt = session.ExpiresAt});
-
-		return Results.Ok(new {SessionId = session.SessionId}); //200
-	}
-
-	private static async Task<IResult> LogoutEndpoint([FromHeader(Name = "Authorization")] string authorization)
+	private IResult LogoutEndpoint([FromHeader(Name = "Authorization")] string authorization)
 	{
-		var (result, _, session) = await AuthenticationService.AuthenticateSession(authorization);
+		var result = userService.Logout(authorization);
+        switch (result)
+        {
+            case ResultEnum.InvalidFormat:
+                return Results.BadRequest();
+            case ResultEnum.Unauthorized:
+				return Results.Unauthorized();
+            case ResultEnum.Authenticated:
+                return Results.Ok();
+			default: throw new NotImplementedException();
+        }
+    }
 
-		switch (result)
-		{
-			case ResultEnum.InvalidFormat: return Results.BadRequest();
-			case ResultEnum.Unauthorized: return Results.Unauthorized();
-		}
-		
-		await using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
-
-		var affectedRows = await connection.ExecuteAsync("""
-				UPDATE TrainingChatApp.Sessions s
-				SET s.IsLoggedOut = 1
-				WHERE s.Key = @Key
-			""",
-			new { Key = session.Key });
-
-		if (affectedRows != 1)
-		{
-			throw new Exception();
-		}
-
-		return Results.Ok();
-	}
-	
-	private static async Task<IResult> GetUser([FromHeader(Name = "Authorization")] string authorization)
+    private IResult GetUser([FromHeader(Name = "Authorization")] string authorization)
 	{
-		var (result, user, _) = await AuthenticationService.AuthenticateSession(authorization);
-
-		switch (result)
-		{
-			case ResultEnum.InvalidFormat: return Results.BadRequest();
-			case ResultEnum.Unauthorized: return Results.Unauthorized();
-		}
-		
-		return await Task.FromResult(Results.Ok(new {Id = user!.Key, user.Username, user.Name}));
-	}
+        var (result, user, _) = AuthenticationService.AuthenticateSession(authorization);
+        switch (result)
+        {
+            case ResultEnum.InvalidFormat: return Results.BadRequest();
+            case ResultEnum.Unauthorized: return Results.Unauthorized();
+        }
+		var resultUser = userService.GetById(user.Key);
+        return Results.Ok(new { Id = resultUser!.Key, resultUser.Username, resultUser.Name });
+    }
 }
 
 public class SignupModel
