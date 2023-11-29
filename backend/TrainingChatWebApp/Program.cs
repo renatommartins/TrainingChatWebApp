@@ -20,7 +20,13 @@ internal static class Program
 					policy.WithHeaders("Authorization","Content-type");
 				});
 		});
-		builder.Services.AddScoped<IUserService, UserService>();
+
+		builder.Services.AddScoped<MySqlConnection>((provider) =>
+			new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp"));
+		
+		Dao.RegisterDI.Register(builder.Services);
+		Services.RegisterDI.Register(builder.Services);
+
 		var app = builder.Build();
 		var options = new DefaultFilesOptions();
 		options.DefaultFileNames.Clear();

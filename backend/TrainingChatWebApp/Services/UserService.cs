@@ -1,158 +1,131 @@
-﻿using Dapper;
-using Konscious.Security.Cryptography;
-using MySql.Data.MySqlClient;
-using System.Net;
+﻿using Konscious.Security.Cryptography;
 using TrainingChatApp.Models.Database;
+using TrainingChatWebApp.Dao.Interfaces;
 using TrainingChatWebApp.Database.Models;
 using TrainingChatWebApp.Services.Enums;
+using TrainingChatWebApp.Services.Interfaces;
 
-namespace TrainingChatWebApp.Services
+namespace TrainingChatWebApp.Services;
+
+public class UserService : IUserService
 {
-    public class UserService : IUserService
-    {
-        public User? GetById(int key)
-        {
-            using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
-            var user = (connection.Query<User>("""
-					SELECT *
-					FROM TrainingChatApp.Users
-					WHERE Key = @key
-					LIMIT 1
-				""", new { key = key })).FirstOrDefault();
+	private readonly IUserDao _userDao;
+	private readonly ISessionService _sessionService;
 
-            return user;
-        }
+	public UserService(
+		IUserDao userDao,
+		ISessionService sessionService)
+	{
+		_userDao = userDao;
+		_sessionService = sessionService;
+	}
 
-        public Session? Login(string username, byte[] passwordBuffer)
-        {
-            using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
-            var user = (connection.Query<User>("""
-					SELECT *
-					FROM TrainingChatApp.Users
-					WHERE Username = @username
-					LIMIT 1
-				""", new { username = username })).FirstOrDefault();
+	public User? GetById(int key) =>
+		Task.Run(async () => await GetByKeyAsync(key)).Result;
 
-            if (user is null)
-            {
-                return null;//Results.Unauthorized();
-            }
+	public async Task<User?> GetByKeyAsync(int key) =>
+		await _userDao.GetUserByKeyAsync(key);
 
-            var hasher = new Argon2id(passwordBuffer);
-            hasher.DegreeOfParallelism = 8;
-            hasher.MemorySize = 16 * 1024;
-            hasher.Iterations = 10;
-            hasher.Salt = user.Salt;
+	public Session? Login(string username, byte[] passwordBuffer) =>
+		Task.Run(async () => await LoginAsync(username, passwordBuffer)).Result;
 
-            var hash = hasher.GetBytes(16);
+	public async Task<Session?> LoginAsync(string username, byte[] passwordBuffer)
+	{
+		var user = await _userDao.GetUserByUsernameAsync(username);
 
-            Array.Fill(passwordBuffer, (byte)0, 0, passwordBuffer.Length);
+		if (user is null)
+		{
+			return null;
+		}
 
-            for (var i = 0; i < 16; i++)
-            {
-                if (hash[i] == user.PasswordHash[i]) continue;
-                return null;// Results.Unauthorized();
-            }
+		var hash = HashPassword(passwordBuffer, user.Salt);
 
-            var session = new Session
-            {
-                UserKey = user.Key,
-                SessionId = Guid.NewGuid(),
-                ExpiresAt = DateTime.UtcNow.AddHours(16),
-            };
+		Array.Fill(passwordBuffer, (byte)0, 0, passwordBuffer.Length);
 
-            connection.Execute("""
-					INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId, ExpiresAt)
-					VALUES (@UserKey, @SessionID, @ExpiresAt)
-				""", new { UserKey = session.UserKey, SessionId = session.SessionId, ExpiresAt = session.ExpiresAt });
+		for (var i = 0; i < 16; i++)
+		{
+			if (hash[i] == user.PasswordHash[i]) continue;
+			return null;
+		}
 
-            return session; //200
-        }
+		var session = await _sessionService.LoginAsync(user);
 
-        public ResultEnum Logout(string token)
-        {
-            var (result, _, session) = AuthenticationService.AuthenticateSession(token);
+		return session; //200
+	}
 
-            switch (result)
-            {
-                case ResultEnum.InvalidFormat:
-                case ResultEnum.Unauthorized:
-                    return result;
-            }
-            using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+	public ResultEnum Logout(Guid token) =>
+		Task.Run(async () => await LogoutAsync(token)).Result;
 
-            var affectedRows = connection.Execute("""
-				UPDATE TrainingChatApp.Sessions s
-				SET s.IsLoggedOut = 1
-				WHERE s.Key = @Key
-			"""
-            ,
-                new { Key = session.Key });
+	public async Task<ResultEnum> LogoutAsync(Guid token)
+	{
+		var result = await _sessionService.LogoutAsync(token);
+			
+		switch (result)
+		{
+			case ResultEnum.InvalidFormat:
+			case ResultEnum.Unauthorized:
+				return result;
+		}
+			
+		return result;
+	}
 
-            if (affectedRows != 1)
-            {
-                throw new Exception();
-            }
+	public SignUpEnum SignUp(SignupModel signupModel) =>
+		Task.Run(async () => await SignUpAsync(signupModel)).Result;
 
-            return result;
-        }
+	public async Task<SignUpEnum> SignUpAsync(SignupModel signupModel)
+	{
+		if (await _userDao.CheckExistsByUsernameAsync(signupModel.Username))
+		{
+			unsafe
+			{
+				fixed (char* authPointer = signupModel.Password)
+					for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
+						*currentChar = '\0';
+			}
+			return SignUpEnum.UserAlreadyExists;
+		}
 
-        public SignUpEnum SignUp(SignupModel signupModel)
-        {
-            using var connection = new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp");
+		var passwordBuffer = new byte[128];
+		var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
 
-            var userCheck = (connection.Query<User>("""
-					SELECT u.Username
-					FROM TrainingChatApp.Users u
-					WHERE Username = @Username
-					LIMIT 1
-				""", new { Username = signupModel.Username })).FirstOrDefault();
+		for (var i = 0; i < signupModel.Password.Length; i++)
+		{
+			passwordBuffer[i] = (byte)signupModel.Password[i];
+		}
 
-            if (userCheck is not null)
-            {
-                unsafe
-                {
-                    fixed (char* authPointer = signupModel.Password)
-                        for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
-                            *currentChar = '\0';
-                }
-                return SignUpEnum.UserAlreadyExists;//Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
-            }
+		unsafe
+		{
+			fixed (char* authPointer = signupModel.Password)
+				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
+					*currentChar = '\0';
+		}
 
-            var passwordBuffer = new byte[128];
-            var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+		var hash = HashPassword(passwordBuffer, salt);
 
-            for (var i = 0; i < signupModel.Password.Length; i++)
-            {
-                passwordBuffer[i] = (byte)signupModel.Password[i];
-            }
+		Array.Fill(passwordBuffer, (byte)0x00);
 
-            unsafe
-            {
-                fixed (char* authPointer = signupModel.Password)
-                    for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
-                        *currentChar = '\0';
-            }
+		await _userDao.CreateUserAsync(
+			new User
+			{
+				Name = signupModel.Name,
+				Username = signupModel.Username,
+				PasswordHash = hash,
+				Salt = salt,
+			});
 
-            var hasher = new Argon2id(passwordBuffer);
-            hasher.DegreeOfParallelism = 8;
-            hasher.MemorySize = 16 * 1024;
-            hasher.Iterations = 10;
-            hasher.Salt = salt;
+		return SignUpEnum.UserCreated;
+	}
+		
+	private static byte[] HashPassword(byte[] passwordBuffer, byte[] salt)
+	{
+		var hasher = new Argon2id(passwordBuffer);
+		hasher.DegreeOfParallelism = 8;
+		hasher.MemorySize = 16 * 1024;
+		hasher.Iterations = 10;
+		hasher.Salt = salt;
 
-            var hash = hasher.GetBytes(16);
-
-            Array.Fill(passwordBuffer, (byte)0x00);
-
-            var rowsAffected = connection.Execute("""
-					INSERT INTO TrainingChatApp.Users (Username, Name, PasswordHash, Salt)
-					VALUES (@Username, @Name, @Password, @Salt)
-				""", new { Username = signupModel.Username, Name = signupModel.Name, Password = hash, Salt = salt });
-
-            if (rowsAffected != 1)
-                throw new Exception();
-
-            return SignUpEnum.UserCreated;
-        }
-    }
+		var hash = hasher.GetBytes(16);
+		return hash;
+	}
 }

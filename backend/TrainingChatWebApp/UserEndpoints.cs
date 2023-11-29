@@ -10,17 +10,12 @@ using TrainingChatWebApp.Services;
 using TrainingChatWebApp.Services.Enums;
 using TrainingChatWebApp.Utils;
 using System.Linq.Expressions;
+using TrainingChatWebApp.Services.Interfaces;
 
 namespace TrainingChatWebApp;
 
-public class UserEndpoints
+public static class UserEndpoints
 {
-    private readonly IUserService userService;
-
-    public UserEndpoints(IUserService userService)
-	{
-        this.userService = userService;
-    }
 	public static void MapEndpoints(WebApplication app)
 	{
 		app.MapPost("/signup", SignupUser).RequireCors(Program.AllowedOrigins);
@@ -29,20 +24,25 @@ public class UserEndpoints
 		app.MapGet("/user", GetUser).RequireCors(Program.AllowedOrigins);
 	}
 
-	private IResult SignupUser(HttpContext context, [FromBody] SignupModel signupModel)
+	private static IResult SignupUser(
+		/*[FromServices]*/IUserService userService,
+		HttpContext context,
+		[FromBody] SignupModel signupModel)
 	{
 		var resultSignUp = userService.SignUp(signupModel);
-        switch (resultSignUp)
-        {
-            case SignUpEnum.UserAlreadyExists:
-                return Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
-            case SignUpEnum.UserCreated:
-                return Results.Ok();
+		switch (resultSignUp)
+		{
+			case SignUpEnum.UserAlreadyExists:
+				return Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
+			case SignUpEnum.UserCreated:
+				return Results.Ok();
 			default: throw new NotImplementedException();
-        }
-    }
+		}
+	}
 
-    private IResult LoginEndpoint([FromHeader(Name = "Authorization")] string authorization)
+	private static IResult LoginEndpoint(
+		IUserService userService,
+		[FromHeader(Name = "Authorization")] string authorization)
 	{
 		var authorizationBytes = new byte[256];
 
@@ -90,42 +90,59 @@ public class UserEndpoints
 				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
 					*currentChar = '\0';
 		}
-        var session = userService.Login(username, passwordBuffer);
-        if (session is null)
-        {
-            return Results.Unauthorized();
-        } else
+		var session = userService.Login(username, passwordBuffer);
+		if (session is null)
+		{
+			return Results.Unauthorized();
+		} else
 		{
 			return Results.Ok(new { SessionId = session.SessionId });
-        }
-    }
+		}
+	}
 
-	private IResult LogoutEndpoint([FromHeader(Name = "Authorization")] string authorization)
+	private static IResult LogoutEndpoint(
+		IUserService userService,
+		[FromHeader(Name = "Authorization")] string authorization)
 	{
-		var result = userService.Logout(authorization);
-        switch (result)
-        {
-            case ResultEnum.InvalidFormat:
-                return Results.BadRequest();
-            case ResultEnum.Unauthorized:
+		var result = userService.Logout(Guid.Parse(authorization));
+		switch (result)
+		{
+			case ResultEnum.InvalidFormat:
+				return Results.BadRequest();
+			case ResultEnum.Unauthorized:
 				return Results.Unauthorized();
-            case ResultEnum.Authenticated:
-                return Results.Ok();
+			case ResultEnum.Authenticated:
+				return Results.Ok();
 			default: throw new NotImplementedException();
-        }
-    }
+		}
+	}
 
-    private IResult GetUser([FromHeader(Name = "Authorization")] string authorization)
+	private static IResult GetUser(
+		IUserService userService,
+		ISessionService sessionService,
+		[FromHeader(Name = "Authorization")] string authorization)
 	{
-        var (result, user, _) = AuthenticationService.AuthenticateSession(authorization);
-        switch (result)
-        {
-            case ResultEnum.InvalidFormat: return Results.BadRequest();
-            case ResultEnum.Unauthorized: return Results.Unauthorized();
-        }
-		var resultUser = userService.GetById(user.Key);
-        return Results.Ok(new { Id = resultUser!.Key, resultUser.Username, resultUser.Name });
-    }
+		var authSplit = authorization.Split(' ');
+		if (authSplit.Length != 2)
+			return Results.BadRequest();
+
+		var scheme = authSplit[0];
+		if (scheme != "Bearer")
+			return Results.BadRequest();
+
+		var sessionGuidString = authSplit[1];
+		Guid sessionGuid;
+		try { sessionGuid = Guid.Parse(sessionGuidString); }
+		catch { return Results.BadRequest(); }
+
+		var session = sessionService.GetActiveById(sessionGuid);
+		
+		if(session is null)
+			return Results.Unauthorized();
+
+		var resultUser = userService.GetById(session.UserKey);
+		return Results.Ok(new { Id = resultUser!.Key, resultUser.Username, resultUser.Name });
+	}
 }
 
 public class SignupModel

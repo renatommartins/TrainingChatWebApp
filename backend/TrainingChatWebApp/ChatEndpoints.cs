@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using TrainingChatApp.Models.Chat;
 using TrainingChatWebApp.Services;
 using TrainingChatWebApp.Services.Enums;
+using TrainingChatWebApp.Services.Interfaces;
 
 namespace TrainingChatWebApp;
 
@@ -14,34 +15,28 @@ public static class ChatEndpoints
 		app.MapGet("/chat-ws", ChatWebsocket).RequireCors(Program.AllowedOrigins);
 	}
 	
-	private static async Task ChatWebsocket (HttpContext context, CancellationToken ct)
+	private static async Task ChatWebsocket (
+		IUserService userService,
+		ISessionService sessionService,
+		HttpContext context,
+		CancellationToken ct)
 	{
-		var authHeader = "Bearer " + context.Request.Headers.WebSocketSubProtocols;
-		var (result, user, _) =
-			await AuthenticationService.AuthenticateSession(authHeader);
+		var sessionGuid = Guid.Parse(context.Request.Headers.WebSocketSubProtocols);
+
+		var session = await sessionService.GetActiveByIdAsync(sessionGuid);
+		
+		if(session is null)
+		{
+			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+			return;
+		}
+		
+		var user = await userService.GetByKeyAsync(session.UserKey);
 
 		var jsonOptions = new JsonSerializerOptions
 		{
 			Converters = {new JsonStringEnumConverter()},
 		};
-
-		switch (result)
-		{
-			case ResultEnum.InvalidFormat:
-			{
-				context.Response.StatusCode = StatusCodes.Status400BadRequest;
-				return;
-			}
-			case ResultEnum.Unauthorized:
-			{
-				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-				return;
-			}
-			case ResultEnum.Authenticated:
-				break;
-			default:
-				throw new ArgumentOutOfRangeException();
-		}
 
 		if (user is null)
 			throw new InvalidProgramException();

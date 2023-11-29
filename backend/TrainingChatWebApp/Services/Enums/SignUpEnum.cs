@@ -1,11 +1,10 @@
-﻿namespace TrainingChatWebApp.Services.Enums
+﻿namespace TrainingChatWebApp.Services.Enums;
+
+public enum SignUpEnum
 {
-    public enum SignUpEnum
-    {
-        UserAlreadyExists,
-        UserNotRegistered,
-        EmailAlreadyRegistered,
-        EmailDoesNotExists,
-        UserCreated
-    }
+    UserAlreadyExists,
+    UserNotRegistered,
+    EmailAlreadyRegistered,
+    EmailDoesNotExists,
+    UserCreated
 }
