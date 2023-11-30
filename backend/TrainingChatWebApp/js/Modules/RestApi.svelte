@@ -50,4 +50,32 @@
         };
         httpRequest.send(body);
     }
+    
+    export const Logout = function (session_token, success_callback, failure_callback) {
+        let encodedLogin = "Bearer " + session_token;
+        
+        let httpRequest = new XMLHttpRequest();
+        let url = '/logout';
+        
+        httpRequest.open("GET", url);
+        httpRequest.onloadend = function (e) {
+            switch (httpRequest.status) {
+                case 200:
+                    success_callback({
+                        statusCode: httpRequest.status
+                    });
+                    break;
+                default:
+                    failure_callback({
+                        statusCode: httpRequest.status,
+                    });
+                    break;
+            }
+        };
+        httpRequest.setRequestHeader(
+            "Authorization",
+            encodedLogin,
+        );
+        httpRequest.send();
+    }
 </script>

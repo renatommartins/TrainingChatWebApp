@@ -2,9 +2,12 @@
     import Materialize from "materialize-css"
     import { onMount } from "svelte";
     
+    import RestApi from "Modules/RestApi.svelte";
     import WebsocketApi from "Modules/WebsocketApi.svelte";
     import Button from "Modules/Button.svelte";
     import TextInput from "Modules/TextInput.svelte";
+    
+    let Logout;
 
     let Connect;
     let CreateChatRoom;
@@ -75,9 +78,13 @@
     
     let message_to_send;
     
-    let logout_handler = function () {
+    const logout_callback = function () {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = 'login.html'
+    }
+    
+    let logout_handler = function () {
+        Logout( localStorage.getItem("sessionToken"), logout_callback, logout_callback);
     };
 
     let reconnect_handler = function () {
@@ -189,6 +196,7 @@
         }
     };
 </script>
+<RestApi bind:Logout></RestApi>
 <WebsocketApi
     bind:user_id
     bind:name
