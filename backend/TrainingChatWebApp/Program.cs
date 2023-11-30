@@ -1,5 +1,12 @@
 using Microsoft.Extensions.FileProviders;
+using MySql.Data.MySqlClient;
+using TrainingChatWebApp.Dao;
+using TrainingChatWebApp.Dao.Interfaces;
+using TrainingChatWebApp.Endpoints;
 using TrainingChatWebApp.Services;
+using TrainingChatWebApp.Services.Interfaces;
+using TrainingChatWebApp.Utils;
+using TrainingChatWebApp.Utils.Interfaces;
 
 namespace TrainingChatWebApp;
 
@@ -26,6 +33,7 @@ internal static class Program
 		
 		Dao.RegisterDI.Register(builder.Services);
 		Services.RegisterDI.Register(builder.Services);
+		builder.Services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
 
 		var app = builder.Build();
 		var options = new DefaultFilesOptions();

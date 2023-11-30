@@ -1,18 +1,14 @@
 ﻿using System.Net;
-using Dapper;
-using Konscious.Security.Cryptography;
-using Microsoft.AspNetCore.Mvc;
-using MySql.Data.MySqlClient;
 using System.Text;
-using TrainingChatApp.Models.Database;
-using TrainingChatWebApp.Database.Models;
-using TrainingChatWebApp.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using TrainingChatWebApp.Dao.Errors;
 using TrainingChatWebApp.Services.Enums;
-using TrainingChatWebApp.Utils;
-using System.Linq.Expressions;
+using TrainingChatWebApp.Services.Errors;
 using TrainingChatWebApp.Services.Interfaces;
+using TrainingChatWebApp.Utils;
 
-namespace TrainingChatWebApp;
+namespace TrainingChatWebApp.Endpoints;
 
 public static class UserEndpoints
 {
@@ -25,23 +21,32 @@ public static class UserEndpoints
 	}
 
 	private static IResult SignupUser(
-		/*[FromServices]*/IUserService userService,
+		IUserService userService,
 		HttpContext context,
 		[FromBody] SignupModel signupModel)
 	{
-		var resultSignUp = userService.SignUp(signupModel);
-		switch (resultSignUp)
+		var signupResult = userService.SignUp(signupModel);
+		if (signupResult.IsError)
 		{
-			case SignUpEnum.UserAlreadyExists:
-				return Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
-			case SignUpEnum.UserCreated:
-				return Results.Ok();
-			default: throw new NotImplementedException();
+			switch (signupResult.Error)
+			{
+				case SignUpError.UserAlreadyExists:
+				case SignUpError.EmailAlreadyRegistered:
+					return Results.Problem(detail: "User already exists", statusCode: (int)HttpStatusCode.Conflict);
+				case SignUpError.CouldNotConnectToDatabase:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
 		}
+
+		var user = signupResult.Value;
+		return Results.Ok(user);
 	}
 
 	private static IResult LoginEndpoint(
 		IUserService userService,
+		ISessionService sessionService,
 		[FromHeader(Name = "Authorization")] string authorization)
 	{
 		var authorizationBytes = new byte[256];
@@ -90,31 +95,62 @@ public static class UserEndpoints
 				for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
 					*currentChar = '\0';
 		}
-		var session = userService.Login(username, passwordBuffer);
-		if (session is null)
+		var loginResult = sessionService.Login(username, passwordBuffer);
+
+		if (loginResult.IsError)
 		{
-			return Results.Unauthorized();
-		} else
-		{
-			return Results.Ok(new { SessionId = session.SessionId });
+			switch (loginResult.Error)
+			{
+				case LoginError.Unauthorized:
+				case LoginError.UserNotRegistered:
+					return Results.Unauthorized();
+				case LoginError.CouldNotConnectToDatabase:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
 		}
+
+		var session = loginResult.Value;
+		
+		return Results.Ok(new { SessionId = session.SessionId });
 	}
 
 	private static IResult LogoutEndpoint(
-		IUserService userService,
+		ISessionService sessionService,
 		[FromHeader(Name = "Authorization")] string authorization)
 	{
-		var result = userService.Logout(Guid.Parse(authorization));
-		switch (result)
+		var authorizationSplit = authorization.Split(' ');
+
+		if (authorizationSplit.Length != 2)
+			return Results.BadRequest();
+		
+		if (authorizationSplit[0] != "Bearer")
+			return Results.BadRequest();
+
+		if (!Guid.TryParse(authorizationSplit[1], out var token))
+			return Results.BadRequest();
+		
+		var logoutResult = sessionService.Logout(token);
+
+		if (logoutResult.IsError)
 		{
-			case ResultEnum.InvalidFormat:
-				return Results.BadRequest();
-			case ResultEnum.Unauthorized:
-				return Results.Unauthorized();
-			case ResultEnum.Authenticated:
-				return Results.Ok();
-			default: throw new NotImplementedException();
+			switch (logoutResult.Error)
+			{
+				case LogoutError.NotFound:
+				case LogoutError.Unauthorized:
+					return Results.Unauthorized();
+				case LogoutError.BadFormat:
+					return Results.BadRequest();
+				case LogoutError.CouldNotConnectToDatabase:
+				case LogoutError.RaceCondition:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
 		}
+		
+		return Results.Ok();
 	}
 
 	private static IResult GetUser(
@@ -135,13 +171,40 @@ public static class UserEndpoints
 		try { sessionGuid = Guid.Parse(sessionGuidString); }
 		catch { return Results.BadRequest(); }
 
-		var session = sessionService.GetActiveById(sessionGuid);
-		
-		if(session is null)
-			return Results.Unauthorized();
+		var validateResult = sessionService.ValidateById(sessionGuid);
 
-		var resultUser = userService.GetById(session.UserKey);
-		return Results.Ok(new { Id = resultUser!.Key, resultUser.Username, resultUser.Name });
+		if (validateResult.IsError)
+		{
+			switch (validateResult.Error)
+			{
+				case SessionValidationError.Unauthorized:
+					return Results.Unauthorized();
+				case SessionValidationError.CouldNotConnectToDatabase:
+					throw new  Exception();
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+		var session = validateResult.Value;
+
+		var getUserResult = userService.GetByKey(session.UserKey);
+
+		if (getUserResult.IsError)
+		{
+			switch (getUserResult.Error)
+			{
+				case GetUserError.CouldNotConnectToDatabase:
+				case GetUserError.UserNotFound:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+		var user = getUserResult.Value;
+		
+		return Results.Ok(new { Id = user.Key, user.Username, user.Name });
 	}
 }
 

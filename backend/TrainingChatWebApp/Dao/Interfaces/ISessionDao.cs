@@ -1,13 +1,15 @@
 ﻿using TrainingChatApp.Models.Database;
+using TrainingChatWebApp.Dao.Errors;
+using TrainingChatWebApp.Utils.OperationResult;
 
 namespace TrainingChatWebApp.Dao.Interfaces;
 
 public interface ISessionDao
 {
-	void Create(Session session);
-	Task CreateAsync(Session session);
-	Session? GetByGuid(Guid guid);
-	Task<Session?> GetByGuidAsync(Guid guid);
-	void Update(Session session);
-	Task UpdateAsync(Session session);
+	Result<Session, CreateSessionError> Create(Session session);
+	Task<Result<Session, CreateSessionError>> CreateAsync(Session session);
+	Result<Session, GetSessionError> GetByGuid(Guid guid);
+	Task<Result<Session, GetSessionError>> GetByGuidAsync(Guid guid);
+	Result<Session, UpdateSessionError> Update(Session session);
+	Task<Result<Session, UpdateSessionError>> UpdateAsync(Session session);
 }

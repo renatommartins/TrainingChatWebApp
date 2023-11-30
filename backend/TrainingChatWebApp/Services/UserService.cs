@@ -1,81 +1,79 @@
-﻿using Konscious.Security.Cryptography;
-using TrainingChatApp.Models.Database;
+﻿using TrainingChatWebApp.Dao.Errors;
 using TrainingChatWebApp.Dao.Interfaces;
 using TrainingChatWebApp.Database.Models;
+using TrainingChatWebApp.Endpoints;
 using TrainingChatWebApp.Services.Enums;
 using TrainingChatWebApp.Services.Interfaces;
+using TrainingChatWebApp.Utils.Interfaces;
+using TrainingChatWebApp.Utils.OperationResult;
+
+using static TrainingChatWebApp.Utils.OperationResult.Helpers;
 
 namespace TrainingChatWebApp.Services;
 
 public class UserService : IUserService
 {
+	private readonly IPasswordHasher _passwordHasher;
 	private readonly IUserDao _userDao;
-	private readonly ISessionService _sessionService;
 
 	public UserService(
-		IUserDao userDao,
-		ISessionService sessionService)
+		IPasswordHasher passwordHasher,
+		IUserDao userDao)
 	{
+		_passwordHasher = passwordHasher;
 		_userDao = userDao;
-		_sessionService = sessionService;
 	}
 
-	public User? GetById(int key) =>
+	public Result<User, GetUserError> GetByKey(int key) =>
 		Task.Run(async () => await GetByKeyAsync(key)).Result;
 
-	public async Task<User?> GetByKeyAsync(int key) =>
+	public async Task<Result<User, GetUserError>> GetByKeyAsync(int key) =>
 		await _userDao.GetUserByKeyAsync(key);
 
-	public Session? Login(string username, byte[] passwordBuffer) =>
-		Task.Run(async () => await LoginAsync(username, passwordBuffer)).Result;
+	public Result<User, GetUserError> GetByUsername(string username) =>
+		Task.Run(async () => await GetByUsernameAsync(username)).Result;
 
-	public async Task<Session?> LoginAsync(string username, byte[] passwordBuffer)
+	public async Task<Result<User, GetUserError>> GetByUsernameAsync(string username)
 	{
-		var user = await _userDao.GetUserByUsernameAsync(username);
+		var getUserResult = await _userDao.GetUserByUsernameAsync(username);
 
-		if (user is null)
+		if (getUserResult.IsError)
 		{
-			return null;
+			switch (getUserResult.Error)
+			{
+				case GetUserError.CouldNotConnectToDatabase:
+					return Error(GetUserError.CouldNotConnectToDatabase);
+				case GetUserError.UserNotFound:
+					return Error(GetUserError.UserNotFound);
+				default:
+					throw new NotImplementedException();
+			}
 		}
 
-		var hash = HashPassword(passwordBuffer, user.Salt);
+		var user = getUserResult.Value;
 
-		Array.Fill(passwordBuffer, (byte)0, 0, passwordBuffer.Length);
-
-		for (var i = 0; i < 16; i++)
-		{
-			if (hash[i] == user.PasswordHash[i]) continue;
-			return null;
-		}
-
-		var session = await _sessionService.LoginAsync(user);
-
-		return session; //200
+		return user;
 	}
 
-	public ResultEnum Logout(Guid token) =>
-		Task.Run(async () => await LogoutAsync(token)).Result;
-
-	public async Task<ResultEnum> LogoutAsync(Guid token)
-	{
-		var result = await _sessionService.LogoutAsync(token);
-			
-		switch (result)
-		{
-			case ResultEnum.InvalidFormat:
-			case ResultEnum.Unauthorized:
-				return result;
-		}
-			
-		return result;
-	}
-
-	public SignUpEnum SignUp(SignupModel signupModel) =>
+	public Result<User, SignUpError> SignUp(SignupModel signupModel) =>
 		Task.Run(async () => await SignUpAsync(signupModel)).Result;
 
-	public async Task<SignUpEnum> SignUpAsync(SignupModel signupModel)
+	public async Task<Result<User, SignUpError>> SignUpAsync(SignupModel signupModel)
 	{
-		if (await _userDao.CheckExistsByUsernameAsync(signupModel.Username))
+		var checkExistsResult = await _userDao.CheckExistsByUsernameAsync(signupModel.Username);
+
+		if (checkExistsResult.IsError)
+		{
+			switch (checkExistsResult.Error)
+			{
+				case SqlError.CouldNotConnect:
+					return Error(SignUpError.CouldNotConnectToDatabase);
+				default:
+					throw new NotImplementedException();
+			}
+		}
+		
+		if (checkExistsResult.Value)
 		{
 			unsafe
 			{
@@ -83,7 +81,7 @@ public class UserService : IUserService
 					for (var currentChar = authPointer; *currentChar != '\0'; currentChar++)
 						*currentChar = '\0';
 			}
-			return SignUpEnum.UserAlreadyExists;
+			return Error(SignUpError.UserAlreadyExists);
 		}
 
 		var passwordBuffer = new byte[128];
@@ -101,11 +99,11 @@ public class UserService : IUserService
 					*currentChar = '\0';
 		}
 
-		var hash = HashPassword(passwordBuffer, salt);
+		var hash = _passwordHasher.Hash(passwordBuffer, salt);
 
 		Array.Fill(passwordBuffer, (byte)0x00);
 
-		await _userDao.CreateUserAsync(
+		var createResult = await _userDao.CreateUserAsync(
 			new User
 			{
 				Name = signupModel.Name,
@@ -114,18 +112,20 @@ public class UserService : IUserService
 				Salt = salt,
 			});
 
-		return SignUpEnum.UserCreated;
-	}
-		
-	private static byte[] HashPassword(byte[] passwordBuffer, byte[] salt)
-	{
-		var hasher = new Argon2id(passwordBuffer);
-		hasher.DegreeOfParallelism = 8;
-		hasher.MemorySize = 16 * 1024;
-		hasher.Iterations = 10;
-		hasher.Salt = salt;
+		if (createResult.IsError)
+		{
+			switch (createResult.Error)
+			{
+				case CreateUserError.CouldNotConnectToDatabase:
+					return Error(SignUpError.CouldNotConnectToDatabase);
+				case CreateUserError.DuplicatedUsername:
+				default:
+					throw new NotImplementedException();
+			}
+		}
 
-		var hash = hasher.GetBytes(16);
-		return hash;
+		var user = createResult.Value;
+
+		return user;
 	}
 }

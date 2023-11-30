@@ -1,12 +1,12 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TrainingChatApp.Models.Chat;
+using TrainingChatWebApp.Dao.Errors;
 using TrainingChatWebApp.Services;
-using TrainingChatWebApp.Services.Enums;
+using TrainingChatWebApp.Services.Errors;
 using TrainingChatWebApp.Services.Interfaces;
 
-namespace TrainingChatWebApp;
+namespace TrainingChatWebApp.Endpoints;
 
 public static class ChatEndpoints
 {
@@ -23,23 +23,46 @@ public static class ChatEndpoints
 	{
 		var sessionGuid = Guid.Parse(context.Request.Headers.WebSocketSubProtocols);
 
-		var session = await sessionService.GetActiveByIdAsync(sessionGuid);
-		
-		if(session is null)
+		var validateResult = await sessionService.ValidateByIdAsync(sessionGuid);
+
+		if (validateResult.IsError)
 		{
-			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-			return;
+			switch (validateResult.Error)
+			{
+				case SessionValidationError.Unauthorized:
+				{
+					context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+					return;
+				}
+				case SessionValidationError.CouldNotConnectToDatabase:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
 		}
+
+		var session = validateResult.Value;
 		
-		var user = await userService.GetByKeyAsync(session.UserKey);
+		var getUserResult = await userService.GetByKeyAsync(session.UserKey);
+
+		if (getUserResult.IsError)
+		{
+			switch (getUserResult.Error)
+			{
+				case GetUserError.CouldNotConnectToDatabase:
+				case GetUserError.UserNotFound:
+					throw new Exception();
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+		var user = getUserResult.Value;
 
 		var jsonOptions = new JsonSerializerOptions
 		{
 			Converters = {new JsonStringEnumConverter()},
 		};
-
-		if (user is null)
-			throw new InvalidProgramException();
 
 		if (!context.WebSockets.IsWebSocketRequest)
 		{

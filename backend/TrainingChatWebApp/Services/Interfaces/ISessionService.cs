@@ -1,15 +1,15 @@
 ﻿using TrainingChatApp.Models.Database;
-using TrainingChatWebApp.Database.Models;
-using TrainingChatWebApp.Services.Enums;
+using TrainingChatWebApp.Services.Errors;
+using TrainingChatWebApp.Utils.OperationResult;
 
 namespace TrainingChatWebApp.Services.Interfaces;
 
 public interface ISessionService
 {
-	Session? Login(User user);
-	Task<Session?> LoginAsync(User user);
-	ResultEnum Logout(Guid token);
-	Task<ResultEnum> LogoutAsync(Guid token);
-	Session? GetActiveById(Guid sessionGuid);
-	Task<Session?> GetActiveByIdAsync(Guid sessionGuid);
+	Result<Session, LoginError> Login(string username, byte[] password);
+	Task<Result<Session, LoginError>> LoginAsync(string username, byte[] password);
+	Result<Session, LogoutError> Logout(Guid token);
+	Task<Result<Session, LogoutError>> LogoutAsync(Guid token);
+	Result<Session, SessionValidationError> ValidateById(Guid sessionGuid);
+	Task<Result<Session, SessionValidationError>> ValidateByIdAsync(Guid sessionGuid);
 }

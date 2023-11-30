@@ -1,10 +1,8 @@
 ﻿namespace TrainingChatWebApp.Services.Enums;
 
-public enum SignUpEnum
+public enum SignUpError
 {
     UserAlreadyExists,
-    UserNotRegistered,
     EmailAlreadyRegistered,
-    EmailDoesNotExists,
-    UserCreated
+    CouldNotConnectToDatabase,
 }
