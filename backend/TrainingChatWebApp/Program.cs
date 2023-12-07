@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Extensions.FileProviders;
 using MySql.Data.MySqlClient;
 using TrainingChatWebApp.Dao;
@@ -28,7 +29,7 @@ internal static class Program
 				});
 		});
 
-		builder.Services.AddScoped<MySqlConnection>((provider) =>
+		builder.Services.AddScoped<IDbConnection>((provider) =>
 			new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp"));
 		
 		Dao.RegisterDI.Register(builder.Services);

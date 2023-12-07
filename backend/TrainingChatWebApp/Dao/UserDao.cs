@@ -1,5 +1,5 @@
-﻿using Dapper;
-using MySql.Data.MySqlClient;
+﻿using System.Data;
+using Dapper;
 using TrainingChatWebApp.Dao.Errors;
 using TrainingChatWebApp.Dao.Interfaces;
 using TrainingChatWebApp.Database.Models;
@@ -11,9 +11,9 @@ namespace TrainingChatWebApp.Dao;
 
 public class UserDao : IUserDao
 {
-	private readonly MySqlConnection _dbConnection;
+	private readonly IDbConnection _dbConnection;
 
-	public UserDao(MySqlConnection dbConnection)
+	public UserDao(IDbConnection dbConnection)
 	{
 		_dbConnection = dbConnection;
 	}
