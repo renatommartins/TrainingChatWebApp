@@ -29,7 +29,7 @@ public class UserDao : IUserDao
 			exists = (await _dbConnection.QueryAsync<bool>(
 					"""
 						SELECT u.Key
-						FROM TrainingChatApp.Users u
+						FROM Users u
 						WHERE u.Username = @username
 						LIMIT 1
 					""",
@@ -58,7 +58,7 @@ public class UserDao : IUserDao
 			user = (await _dbConnection.QueryAsync<User>(
 					"""
 						SELECT *
-						FROM TrainingChatApp.Users u
+						FROM Users u
 						WHERE u.Key = @key
 						LIMIT 1
 					""",
@@ -90,7 +90,7 @@ public class UserDao : IUserDao
 			user = (await _dbConnection.QueryAsync<User>(
 					"""
 						SELECT *
-						FROM TrainingChatApp.Users
+						FROM Users
 						WHERE Username = @username
 						LIMIT 1
 					""",
@@ -121,7 +121,7 @@ public class UserDao : IUserDao
 			var userExists = (await _dbConnection.QueryAsync<int>(
 				"""
 						SELECT COUNT(u.Key)
-						FROM TrainingChatApp.Users u
+						FROM Users u
 						WHERE u.Username = @username
 					""",
 				new { username = user.Username }))
@@ -134,7 +134,7 @@ public class UserDao : IUserDao
 			
 			user.Key = (await _dbConnection.QueryAsync<int>(
 					"""
-						INSERT INTO TrainingChatApp.Users (Username, Name, PasswordHash, Salt)
+						INSERT INTO Users (Username, Name, PasswordHash, Salt)
 						VALUES (@Username, @Name, @Password, @Salt);
 
 						SELECT LAST_INSERT_ID();

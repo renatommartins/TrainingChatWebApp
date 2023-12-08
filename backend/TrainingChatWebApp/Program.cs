@@ -1,11 +1,9 @@
 using System.Data;
+using System.Reflection;
+using FluentMigrator.Runner;
 using Microsoft.Extensions.FileProviders;
 using MySql.Data.MySqlClient;
-using TrainingChatWebApp.Dao;
-using TrainingChatWebApp.Dao.Interfaces;
 using TrainingChatWebApp.Endpoints;
-using TrainingChatWebApp.Services;
-using TrainingChatWebApp.Services.Interfaces;
 using TrainingChatWebApp.Utils;
 using TrainingChatWebApp.Utils.Interfaces;
 
@@ -14,7 +12,7 @@ namespace TrainingChatWebApp;
 internal static class Program
 {
 	public const string AllowedOrigins = "allowed_origins";
-	private static void Main(string[] args)
+	private static async Task Main(string[] args)
 	{
 		var builder = WebApplication.CreateBuilder(args);
 
@@ -28,15 +26,27 @@ internal static class Program
 					policy.WithHeaders("Authorization","Content-type");
 				});
 		});
-
+		
 		builder.Services.AddScoped<IDbConnection>((provider) =>
-			new MySqlConnection("Server=localhost; User ID=root; Password=123456; Database=TrainingChatApp"));
+			new MySqlConnection(builder.Configuration.GetConnectionString("SqlConnection")));
+		builder.Services.AddScoped<MySqlMigrationManager>();
+		builder.Services
+			.AddFluentMigratorCore()
+			.ConfigureRunner(
+				c => c.AddMySql5()
+					.WithGlobalConnectionString(builder.Configuration.GetConnectionString("SqlConnection"))
+					.ScanIn(Assembly.GetExecutingAssembly()).For.Migrations());
 		
 		Dao.RegisterDI.Register(builder.Services);
 		Services.RegisterDI.Register(builder.Services);
 		builder.Services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
 
 		var app = builder.Build();
+
+		var migrationScope = app.Services.CreateScope();
+		var migrationManager = migrationScope.ServiceProvider.GetRequiredService<MySqlMigrationManager>();
+		await migrationManager.MigrateDatabase(app.Configuration["Database:Name"]!);
+
 		var options = new DefaultFilesOptions();
 		options.DefaultFileNames.Clear();
 		options.DefaultFileNames.Add("wwwroot-nocache/index.html");

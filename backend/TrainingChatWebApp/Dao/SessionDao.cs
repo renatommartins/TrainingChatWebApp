@@ -28,7 +28,7 @@ public class SessionDao : ISessionDao
 		{
 			key = (await _dbConnection.QueryAsync<int>(
 					"""
-						INSERT INTO TrainingChatApp.Sessions (UserKey, SessionId, ExpiresAt)
+						INSERT INTO Sessions (UserKey, SessionId, ExpiresAt)
 						VALUES (@UserKey, @SessionID, @ExpiresAt);
 						SELECT LAST_INSERT_ID();
 					""",
@@ -61,7 +61,7 @@ public class SessionDao : ISessionDao
 			session = (await _dbConnection.QueryAsync<Session>(
 					"""
 					SELECT s.Key, s.UserKey, s.ExpiresAt, s.IsLoggedOut
-					FROM TrainingChatApp.Sessions s
+					FROM Sessions s
 					WHERE SessionId = @session
 					LIMIT 1
 				""",
@@ -91,7 +91,7 @@ public class SessionDao : ISessionDao
 		{
 			var rows = await _dbConnection.ExecuteAsync(
 				"""
-					UPDATE TrainingChatApp.Sessions s
+					UPDATE Sessions s
 					SET s.IsLoggedOut = @isLoggedOut
 					WHERE s.Key = @key
 				""",
