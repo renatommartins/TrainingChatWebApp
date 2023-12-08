@@ -19,12 +19,31 @@ internal static class Program
 		builder.Services.AddCors(options =>
 		{
 			options.AddPolicy(
-				name:AllowedOrigins,
+				"AllowAll",
 				policy =>
 				{
-					policy.WithOrigins("http://localhost:5140","http://localhost:5500","http://127.0.0.1:5500");
-					policy.WithHeaders("Authorization","Content-type");
+					policy
+						.AllowAnyOrigin()
+						.AllowAnyMethod()
+						.AllowAnyHeader();
 				});
+			if (!builder.Environment.IsDevelopment())
+			{
+				options.AddPolicy(
+					"AllowFromConfiguration",
+					policy =>
+					{
+						policy
+							.WithOrigins(builder.Configuration["CORS:allowedOrigins"]!)
+							.WithMethods(builder.Configuration["CORS:allowedMethods"]!)
+							.WithHeaders(builder.Configuration["CORS:allowedHeaders"]!);
+
+						if (builder.Configuration.GetValue<bool>("CORS:allowCredentials"))
+							policy.AllowCredentials();
+						else
+							policy.DisallowCredentials();
+					});
+			}
 		});
 		
 		builder.Services.AddScoped<IDbConnection>((provider) =>
@@ -67,7 +86,10 @@ internal static class Program
 
 		app.UseWebSockets();
 
-		app.UseCors(AllowedOrigins);
+		if (app.Environment.IsDevelopment())
+			app.UseCors(AllowedOrigins);
+		else
+			app.UseCors(AllowedOrigins);
 
 		app.MapGet("/hello-world", () => "Hello World!");
 

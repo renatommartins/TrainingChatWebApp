@@ -14,10 +14,10 @@ public static class UserEndpoints
 {
 	public static void MapEndpoints(WebApplication app)
 	{
-		app.MapPost("/signup", SignupUser).RequireCors(Program.AllowedOrigins);
-		app.MapGet("/login", LoginEndpoint).RequireCors(Program.AllowedOrigins);
-		app.MapGet("/logout", LogoutEndpoint).RequireCors(Program.AllowedOrigins);
-		app.MapGet("/user", GetUser).RequireCors(Program.AllowedOrigins);
+		app.MapPost("/signup", SignupUser);
+		app.MapGet("/login", LoginEndpoint);
+		app.MapGet("/logout", LogoutEndpoint);
+		app.MapGet("/user", GetUser);
 	}
 
 	private static IResult SignupUser(
